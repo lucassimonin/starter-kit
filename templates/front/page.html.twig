@@ -1,0 +1,33 @@
+{% extends 'front/base.html.twig' %}
+
+{% set site_name = setting('site_name', 'Mon site') %}
+{% set page_url = app.request.schemeAndHttpHost ~ (page.isHomepage ? '/' : '/' ~ page.slug) %}
+
+{% block head_title %}{{ page.metaTitle ?: (page.title ~ (setting('tagline') ? ' — ' ~ setting('tagline'))) }}{% endblock %}
+
+{% block seo %}
+    {% if page.metaDescription %}<meta name="description" content="{{ page.metaDescription }}">{% endif %}
+    {% if page.noindex %}<meta name="robots" content="noindex, nofollow">{% endif %}
+    <link rel="canonical" href="{{ page.canonicalUrl ?: page_url }}">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="{{ site_name }}">
+    <meta property="og:title" content="{{ page.metaTitle ?: page.title }}">
+    {% if page.metaDescription %}<meta property="og:description" content="{{ page.metaDescription }}">{% endif %}
+    <meta property="og:url" content="{{ page_url }}">
+    {% if page.ogImage %}<meta property="og:image" content="{{ page.ogImage starts with 'http' ? page.ogImage : app.request.schemeAndHttpHost ~ page.ogImage }}">{% endif %}
+    <meta name="twitter:card" content="summary_large_image">
+
+    {% if page.structuredData %}
+        <script type="application/ld+json">{{ page.structuredData|raw }}</script>
+    {% endif %}
+{% endblock %}
+
+{# Header transparent si la page commence par un hero plein écran #}
+{% block header_transparent %}{{ page.blocks|filter(b => b.enabled)|first is not null and (page.blocks|filter(b => b.enabled)|first).type == 'hero' ? '1' : '0' }}{% endblock %}
+
+{% block body %}
+    {% for block in page.blocks %}
+        {{ render_cms_block(block) }}
+    {% endfor %}
+{% endblock %}

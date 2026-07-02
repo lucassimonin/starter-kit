@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {# ================= SEO ================= #}
+    {% set site_name = setting('site_name', 'Mon site') %}
+    <title>{% block head_title %}{{ site_name }}{% endblock %}</title>
+    {% block seo %}{% endblock %}
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ asset('styles/app.css') }}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    {{ importmap('app') }}
+
+    {% if setting('analytics_id') %}
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ setting('analytics_id') }}"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '{{ setting('analytics_id') }}');
+        </script>
+    {% endif %}
+</head>
+<body class="bg-sand font-body text-ink antialiased">
+
+{% if is_preview is defined and is_preview %}
+    <div class="fixed inset-x-0 bottom-0 z-[60] bg-amber-500 px-4 py-2 text-center text-sm font-bold text-white">
+        Prévisualisation — cette page est en brouillon et n'est pas visible publiquement.
+    </div>
+{% endif %}
+
+{# ================= Header ================= #}
+{% set header_links = nav_items('header')|filter(i => not i.isButton) %}
+{% set header_ctas = nav_items('header')|filter(i => i.isButton) %}
+{% set mid = (header_links|length + 1) // 2 %}
+
+<header id="siteHeader" class="fixed inset-x-0 top-0 z-50 transition-all duration-300" data-transparent="{% block header_transparent %}0{% endblock %}">
+    <nav class="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-4 sm:px-6">
+        <div class="hidden items-center gap-5 md:flex">
+            {% for item in header_links|slice(0, mid) %}
+                <a href="{{ item.url }}" class="nav-link text-xs font-semibold uppercase tracking-[0.16em] transition">{{ item.label }}</a>
+            {% endfor %}
+        </div>
+
+        <a href="{{ path('front_homepage') }}" class="justify-self-center text-center">
+            {% if setting('logo_url') %}
+                <img id="logoImg" src="{{ setting('logo_url') }}" alt="{{ site_name }}" class="mx-auto h-12 w-auto max-w-[160px] sm:h-14" width="140" height="56">
+            {% else %}
+                <span class="font-display text-xl font-semibold text-forest">{{ site_name }}</span>
+            {% endif %}
+        </a>
+
+        <div class="hidden items-center justify-end gap-5 md:flex">
+            {% for item in header_links|slice(mid) %}
+                <a href="{{ item.url }}" class="nav-link text-xs font-semibold uppercase tracking-[0.16em] transition">{{ item.label }}</a>
+            {% endfor %}
+            {% for item in header_ctas %}
+                <a href="{{ item.url }}" class="nav-cta rounded-journal border border-sand/30 bg-sand/10 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-sand backdrop-blur-sm transition hover:bg-sand hover:text-forest">{{ item.label }}</a>
+            {% endfor %}
+        </div>
+
+        <button id="mobileMenuBtn" type="button" class="col-start-3 justify-self-end rounded-journal border border-line bg-sand/80 p-2.5 text-forest md:hidden" aria-label="Menu" aria-expanded="false">
+            <i data-lucide="menu" class="h-5 w-5"></i>
+        </button>
+    </nav>
+
+    <div id="mobileMenu" class="hidden border-t border-line/40 bg-sand/95 px-4 py-4 backdrop-blur-md md:hidden">
+        <div class="flex flex-col gap-2 text-sm font-medium">
+            {% for item in header_links %}
+                <a href="{{ item.url }}" class="rounded-journal px-3 py-2 hover:bg-forest/5">{{ item.label }}</a>
+            {% endfor %}
+            {% for item in header_ctas %}
+                <a href="{{ item.url }}" class="mt-1 rounded-journal bg-forest px-3 py-2.5 text-center text-sand">{{ item.label }}</a>
+            {% endfor %}
+        </div>
+    </div>
+</header>
+
+{# ================= Contenu ================= #}
+<main id="top">
+    {% block body %}{% endblock %}
+</main>
+
+{# ================= Footer ================= #}
+<footer class="border-t border-line py-8 text-center text-xs text-ink/45">
+    <p>© <span id="year"></span> {{ setting('footer_text', site_name) }}</p>
+    {% set footer_items = nav_items('footer') %}
+    {% if footer_items|length > 0 or setting('instagram') or setting('facebook') %}
+        <p class="mt-1 space-x-2">
+            {% for item in footer_items %}
+                <a href="{{ item.url }}" class="underline decoration-ink/20 hover:text-forest">{{ item.label }}</a>{{ not loop.last ? ' ·' }}
+            {% endfor %}
+            {% if setting('instagram') %} · <a href="{{ setting('instagram') }}" target="_blank" rel="noopener" class="underline decoration-ink/20 hover:text-forest">Instagram</a>{% endif %}
+            {% if setting('facebook') %} · <a href="{{ setting('facebook') }}" target="_blank" rel="noopener" class="underline decoration-ink/20 hover:text-forest">Facebook</a>{% endif %}
+        </p>
+    {% endif %}
+</footer>
+</body>
+</html>

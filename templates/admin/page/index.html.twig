@@ -1,0 +1,64 @@
+{% extends 'admin/base.html.twig' %}
+{% import 'admin/_icons.html.twig' as icons %}
+
+{% block title %}Pages{% endblock %}
+{% block page_title %}Pages{% endblock %}
+
+{% block header_actions %}
+    <a href="{{ path('admin_page_new') }}" class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-3.5 py-2 text-[13px] font-bold text-white transition hover:bg-emerald-800">
+        {{ icons.icon('plus', 'h-4 w-4') }} Nouvelle page
+    </a>
+{% endblock %}
+
+{% block content %}
+    <div class="overflow-hidden rounded-2xl border border-stone-200 bg-white">
+        <table class="w-full text-left text-sm">
+            <thead class="bg-stone-50 text-[11px] font-bold uppercase tracking-wider text-stone-400">
+                <tr>
+                    <th class="px-5 py-3">Titre</th>
+                    <th class="px-5 py-3">URL</th>
+                    <th class="px-5 py-3">Statut</th>
+                    <th class="px-5 py-3">Blocs</th>
+                    <th class="px-5 py-3">Modifiée</th>
+                    <th class="px-5 py-3 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-stone-100">
+                {% for page in pages %}
+                    <tr class="transition hover:bg-stone-50/60">
+                        <td class="px-5 py-3.5">
+                            <a href="{{ path('admin_page_edit', {id: page.id}) }}" class="inline-flex items-center gap-2 font-semibold text-stone-900 hover:text-emerald-700">
+                                {{ page.title }}
+                                {% if page.isHomepage %}{{ icons.icon('home', 'h-3.5 w-3.5 text-stone-400') }}{% endif %}
+                            </a>
+                        </td>
+                        <td class="px-5 py-3.5 font-mono text-xs text-stone-500">/{{ page.isHomepage ? '' : page.slug }}</td>
+                        <td class="px-5 py-3.5">
+                            <span class="rounded-full px-2 py-0.5 text-[11px] font-bold {{ page.published ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' }}">
+                                {{ page.published ? 'Publiée' : 'Brouillon' }}
+                            </span>
+                        </td>
+                        <td class="px-5 py-3.5 text-stone-500">{{ page.blocks|length }}</td>
+                        <td class="px-5 py-3.5 text-xs text-stone-400">{{ page.updatedAt|date('d/m/Y H:i') }}</td>
+                        <td class="px-5 py-3.5">
+                            <div class="flex items-center justify-end gap-1">
+                                <a href="{{ page.isHomepage ? path('front_homepage') : path('front_page', {slug: page.slug}) }}" target="_blank"
+                                   class="rounded-lg p-2 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700" title="Voir la page">
+                                    {{ icons.icon('external', 'h-4 w-4') }}
+                                </a>
+                                <form method="post" action="{{ path('admin_page_delete', {id: page.id}) }}" data-confirm="Supprimer la page « {{ page.title }} » et tous ses blocs ?">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('admin') }}">
+                                    <button type="submit" class="rounded-lg p-2 text-stone-400 transition hover:bg-red-50 hover:text-red-600" title="Supprimer">
+                                        {{ icons.icon('trash', 'h-4 w-4') }}
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="6" class="px-5 py-10 text-center text-stone-400">Aucune page. Créez votre première page.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

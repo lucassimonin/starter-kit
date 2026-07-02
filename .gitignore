@@ -1,0 +1,39 @@
+/.env.local
+/.env.*.local
+/var/
+/vendor/
+/public/assets/
+/public/uploads/media/*
+!/public/uploads/media/.gitkeep
+/assets/vendor/
+/composer.lock
+/symfony.lock
+/var/tailwind/
+/phpunit.xml
+/behat.yml
+/.phpunit.cache/
+.DS_Store
+
+###> symfony/framework-bundle ###
+/.env.local
+/.env.local.php
+/.env.*.local
+/config/secrets/prod/prod.decrypt.private.php
+/public/bundles/
+/var/
+/vendor/
+###< symfony/framework-bundle ###
+
+###> friends-of-behat/symfony-extension ###
+/behat.yml
+###< friends-of-behat/symfony-extension ###
+
+###> phpunit/phpunit ###
+/phpunit.xml
+/.phpunit.cache/
+###< phpunit/phpunit ###
+
+###> symfony/asset-mapper ###
+/public/assets/
+/assets/vendor/
+###< symfony/asset-mapper ###

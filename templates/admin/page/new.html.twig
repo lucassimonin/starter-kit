@@ -1,0 +1,35 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Nouvelle page{% endblock %}
+{% block page_title %}Nouvelle page{% endblock %}
+
+{% block content %}
+    <div class="mx-auto max-w-2xl">
+        {{ form_start(form) }}
+            <div class="rounded-2xl border border-stone-200 bg-white p-6">
+                <h2 class="mb-5 text-sm font-bold">Informations</h2>
+                {{ form_row(form.title) }}
+                {{ form_row(form.slug) }}
+                {{ form_row(form.status) }}
+                {{ form_row(form.isHomepage) }}
+            </div>
+
+            <div class="mt-5 rounded-2xl border border-stone-200 bg-white p-6">
+                <h2 class="mb-5 text-sm font-bold">SEO <span class="ml-1 font-normal text-stone-400">(modifiable ensuite)</span></h2>
+                {{ form_row(form.metaTitle) }}
+                {{ form_row(form.metaDescription) }}
+                {{ form_row(form.ogImage) }}
+                {{ form_row(form.canonicalUrl) }}
+                {{ form_row(form.noindex) }}
+                {{ form_row(form.structuredData) }}
+            </div>
+
+            <div class="mt-5 flex items-center justify-end gap-3">
+                <a href="{{ path('admin_pages') }}" class="rounded-lg px-4 py-2.5 text-sm font-semibold text-stone-500 hover:text-stone-800">Annuler</a>
+                <button type="submit" class="rounded-lg bg-emerald-700 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-800">
+                    Créer et ajouter des blocs
+                </button>
+            </div>
+        {{ form_end(form) }}
+    </div>
+{% endblock %}

@@ -1,0 +1,31 @@
+<section {% if data.anchor|default('') %}id="{{ data.anchor }}"{% endif %} class="scroll-mt-24 border-t border-line py-20 sm:py-28">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6">
+        <div class="reveal flex flex-col gap-8 rounded-journal border border-line bg-white p-6 sm:flex-row sm:items-center sm:justify-between sm:p-10">
+            <div>
+                {% if data.kicker %}
+                    <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sage">{{ data.kicker }}</p>
+                {% endif %}
+                {% if data.title %}
+                    <h2 class="mt-2 font-display text-2xl font-semibold text-forest sm:text-3xl">{{ data.title }}</h2>
+                {% endif %}
+                {% if data.text %}
+                    <p class="mt-2 max-w-md text-sm text-ink/65">{{ data.text }}</p>
+                {% endif %}
+            </div>
+            <div class="flex flex-col gap-3 sm:items-end">
+                {% for link in data.links|split_pairs %}
+                    <a href="{{ link.right ?: '#' }}" {% if link.right starts with 'http' %}target="_blank" rel="noopener noreferrer"{% endif %}
+                       class="inline-flex items-center gap-2 text-sm font-semibold text-forest hover:text-sage">
+                        {{ link.left }} <i data-lucide="external-link" class="h-4 w-4"></i>
+                    </a>
+                {% endfor %}
+                {% if data.button_label %}
+                    <a href="{{ data.button_link ?: '#' }}"
+                       class="mt-2 inline-flex items-center gap-2 rounded-journal bg-forest px-5 py-3 text-sm font-semibold text-sand transition hover:bg-earth">
+                        {{ data.button_label }} <i data-lucide="arrow-right" class="h-4 w-4"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>

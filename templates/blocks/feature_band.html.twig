@@ -1,0 +1,43 @@
+<section class="bg-forest py-20 text-sand sm:py-28">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6">
+        <div class="grid gap-12 lg:grid-cols-2">
+            <div class="reveal">
+                {% if data.kicker %}
+                    <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sand/55">{{ data.kicker }}</p>
+                {% endif %}
+                {% if data.title %}
+                    <h2 class="mt-3 font-display text-3xl font-semibold sm:text-4xl">{{ data.title }}</h2>
+                {% endif %}
+                {% if data.text %}
+                    <p class="mt-5 text-sm leading-relaxed text-sand/80 sm:text-base">{{ data.text }}</p>
+                {% endif %}
+
+                {% set bullets = data.bullets|split_pairs %}
+                {% if bullets|length > 0 %}
+                    <ul class="mt-8 space-y-3 text-sm text-sand/75">
+                        {% for bullet in bullets %}
+                            <li class="flex gap-3">
+                                <i data-lucide="{{ bullet.right ? bullet.left : 'check' }}" class="mt-0.5 h-4 w-4 shrink-0 opacity-60"></i>
+                                {{ bullet.right ?: bullet.left }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+
+            {% set testimonials = data.testimonials|split_pairs %}
+            {% if testimonials|length > 0 %}
+                <div class="reveal space-y-4">
+                    {% for testimonial in testimonials %}
+                        <blockquote class="rounded-journal border border-sand/15 bg-sand/5 p-5 text-sm italic text-sand/90">
+                            « {{ testimonial.left }} »
+                            {% if testimonial.right %}
+                                <footer class="mt-2 text-xs font-semibold not-italic text-sand/55">— {{ testimonial.right }}</footer>
+                            {% endif %}
+                        </blockquote>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>

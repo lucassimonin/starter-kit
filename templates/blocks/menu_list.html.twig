@@ -1,0 +1,35 @@
+<section {% if data.anchor|default('') %}id="{{ data.anchor }}"{% endif %} class="scroll-mt-24 border-t border-line bg-white/60 py-20 sm:py-28">
+    <div class="mx-auto max-w-3xl px-4 sm:px-6">
+        <div class="reveal text-center">
+            {% if data.kicker %}
+                <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sage">{{ data.kicker }}</p>
+            {% endif %}
+            {% if data.title %}
+                <h2 class="mt-3 font-display text-3xl font-semibold text-forest sm:text-4xl">{{ data.title }}</h2>
+            {% endif %}
+            {% if data.intro %}
+                <p class="mt-3 text-sm text-ink/55">{{ data.intro|raw }}</p>
+            {% endif %}
+        </div>
+
+        {% for category in data.categories %}
+            <div class="reveal mt-12 {{ not loop.first ? 'border-t border-line pt-12' }}">
+                {% if category.title|default('') %}
+                    <h3 class="font-display text-lg font-semibold text-forest">{{ category.title }}</h3>
+                {% endif %}
+                <ul class="mt-6 space-y-3 text-sm">
+                    {% for item in category.items|default('')|split_pairs %}
+                        <li class="flex items-end">
+                            <span class="font-medium">{{ item.left }}</span>
+                            <span class="menu-dot"></span>
+                            <span class="text-ink/50">{{ item.right ?: '—' }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+                {% if category.note|default('') %}
+                    <p class="mt-2 text-xs text-ink/45">{{ category.note }}</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+</section>

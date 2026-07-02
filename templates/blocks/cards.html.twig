@@ -1,0 +1,43 @@
+<section {% if data.anchor|default('') %}id="{{ data.anchor }}"{% endif %} class="scroll-mt-24 border-t border-line py-20 sm:py-28">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6">
+        <div class="reveal mx-auto max-w-3xl text-center">
+            {% if data.kicker %}
+                <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sage">{{ data.kicker }}</p>
+            {% endif %}
+            {% if data.title %}
+                <h2 class="mt-3 font-display text-3xl font-semibold text-forest sm:text-4xl">{{ data.title }}</h2>
+            {% endif %}
+            {% if data.intro %}
+                <p class="mt-5 text-sm leading-relaxed text-ink/70 sm:text-base">{{ data.intro|raw }}</p>
+            {% endif %}
+            {% if data.intro_highlight %}
+                <p class="mt-4 text-sm font-medium text-forest">{{ data.intro_highlight }}</p>
+            {% endif %}
+        </div>
+
+        {% if data.cards|length > 0 %}
+            {% set grid_classes = {1: 'md:grid-cols-1', 2: 'md:grid-cols-2', 3: 'md:grid-cols-3'} %}
+            <div class="mt-14 grid gap-8 {{ grid_classes[min(data.cards|length, 3)] }}">
+                {% for card in data.cards %}
+                    <article {% if card.anchor|default('') %}id="{{ card.anchor }}"{% endif %} class="reveal scroll-mt-28">
+                        {% if card.image|default('') %}
+                            <div class="overflow-hidden rounded-journal border border-line bg-white">
+                                <img src="{{ card.image }}" alt="{{ card.image_alt|default('') }}" class="aspect-[4/3] w-full object-cover" loading="lazy">
+                            </div>
+                        {% endif %}
+                        {% if card.title|default('') %}
+                            <h3 class="mt-5 font-display text-xl font-semibold text-forest">{{ card.title }}</h3>
+                        {% endif %}
+                        {% if card.text|default('') %}
+                            <p class="mt-2 text-sm leading-relaxed text-ink/70">{{ card.text }}</p>
+                        {% endif %}
+                    </article>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if data.footnote %}
+            <p class="reveal mx-auto mt-12 max-w-2xl text-center text-sm text-ink/60">{{ data.footnote }}</p>
+        {% endif %}
+    </div>
+</section>

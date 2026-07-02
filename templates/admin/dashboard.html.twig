@@ -1,0 +1,57 @@
+{% extends 'admin/base.html.twig' %}
+{% import 'admin/_icons.html.twig' as icons %}
+
+{% block title %}Tableau de bord{% endblock %}
+{% block page_title %}Tableau de bord{% endblock %}
+
+{% block header_actions %}
+    <a href="{{ path('admin_page_new') }}" class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-3.5 py-2 text-[13px] font-bold text-white transition hover:bg-emerald-800">
+        {{ icons.icon('plus', 'h-4 w-4') }} Nouvelle page
+    </a>
+{% endblock %}
+
+{% block content %}
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {% set cards = [
+            {label: 'Pages', value: counts.pages, href: path('admin_pages'), icon: 'pages'},
+            {label: 'Publiées', value: counts.published, href: path('admin_pages'), icon: 'check'},
+            {label: 'Médias', value: counts.media, href: path('admin_media'), icon: 'media'},
+            {label: 'Redirections', value: counts.redirects, href: path('admin_redirects'), icon: 'redirects'},
+        ] %}
+        {% for card in cards %}
+            <a href="{{ card.href }}" class="group rounded-2xl border border-stone-200 bg-white p-5 transition hover:border-emerald-600/40 hover:shadow-md">
+                <div class="flex items-center justify-between">
+                    <p class="text-[13px] font-semibold text-stone-500">{{ card.label }}</p>
+                    <span class="text-stone-300 transition group-hover:text-emerald-600">{{ icons.icon(card.icon, 'h-5 w-5') }}</span>
+                </div>
+                <p class="mt-2 text-3xl font-extrabold tracking-tight">{{ card.value }}</p>
+            </a>
+        {% endfor %}
+    </div>
+
+    <div class="mt-8 rounded-2xl border border-stone-200 bg-white">
+        <div class="border-b border-stone-100 px-5 py-4">
+            <h2 class="text-sm font-bold">Dernières pages modifiées</h2>
+        </div>
+        {% if recent_pages is empty %}
+            <p class="px-5 py-8 text-center text-sm text-stone-400">Aucune page pour le moment — créez-en une ou chargez les fixtures.</p>
+        {% else %}
+            <ul class="divide-y divide-stone-100">
+                {% for page in recent_pages %}
+                    <li>
+                        <a href="{{ path('admin_page_edit', {id: page.id}) }}" class="flex items-center justify-between px-5 py-3.5 transition hover:bg-stone-50">
+                            <div class="flex items-center gap-3">
+                                <span class="text-sm font-semibold">{{ page.title }}</span>
+                                {% if page.isHomepage %}{{ icons.icon('home', 'h-3.5 w-3.5 text-stone-400') }}{% endif %}
+                                <span class="rounded-full px-2 py-0.5 text-[11px] font-bold {{ page.published ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' }}">
+                                    {{ page.published ? 'Publiée' : 'Brouillon' }}
+                                </span>
+                            </div>
+                            <span class="text-xs text-stone-400">{{ page.updatedAt|date('d/m/Y H:i') }}</span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+{% endblock %}

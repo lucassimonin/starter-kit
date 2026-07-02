@@ -1,0 +1,22 @@
+default:
+    suites:
+        default:
+            paths:
+                - '%paths.base%/features'
+            contexts:
+                - App\Tests\Behat\FeatureContext
+                - Behat\MinkExtension\Context\MinkContext
+
+    extensions:
+        FriendsOfBehat\SymfonyExtension:
+            bootstrap: tests/bootstrap.php
+            kernel:
+                class: App\Kernel
+                environment: test
+
+        Behat\MinkExtension:
+            base_url: 'http://localhost'
+            default_session: symfony
+            sessions:
+                symfony:
+                    symfony: ~

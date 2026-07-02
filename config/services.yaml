@@ -1,0 +1,26 @@
+parameters:
+    app.upload_dir: '%kernel.project_dir%/public/uploads/media'
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    _instanceof:
+        App\Block\BlockTypeInterface:
+            tags: ['app.block_type']
+
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+
+    App\Service\MediaUploader:
+        arguments:
+            $uploadDir: '%app.upload_dir%'
+
+    App\EventListener\SlugHistoryListener:
+        tags:
+            - { name: doctrine.event_listener, event: onFlush }

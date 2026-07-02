@@ -1,0 +1,69 @@
+{% extends 'admin/base.html.twig' %}
+{% import 'admin/_icons.html.twig' as icons %}
+
+{% block title %}Médias{% endblock %}
+{% block page_title %}Bibliothèque de médias{% endblock %}
+
+{% block content %}
+    {# Upload #}
+    <form method="post" action="{{ path('admin_media_upload') }}" enctype="multipart/form-data"
+          class="mb-8 flex flex-wrap items-end gap-4 rounded-2xl border-2 border-dashed border-stone-300 bg-white/60 p-6">
+        <input type="hidden" name="_token" value="{{ csrf_token('admin') }}">
+        <div>
+            <label class="mb-1.5 block text-[13px] font-semibold text-stone-700">Images (JPEG, PNG, GIF, WebP, SVG)</label>
+            <input type="file" name="files[]" multiple accept="image/*" required
+                   class="block text-sm text-stone-500 file:mr-3 file:rounded-lg file:border-0 file:bg-stone-900 file:px-4 file:py-2 file:text-[13px] file:font-bold file:text-white hover:file:bg-stone-700">
+        </div>
+        <div class="min-w-56 flex-1">
+            <label class="mb-1.5 block text-[13px] font-semibold text-stone-700">Texte alternatif (optionnel)</label>
+            <input type="text" name="alt" placeholder="Description de l'image pour le SEO et l'accessibilité"
+                   class="block w-full rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-emerald-600">
+        </div>
+        <button type="submit" class="rounded-lg bg-emerald-700 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-800">
+            Importer
+        </button>
+        <p class="w-full text-xs text-stone-400">Une variante WebP et une miniature sont générées automatiquement à l'import.</p>
+    </form>
+
+    {# Grille #}
+    {% if medias is empty %}
+        <p class="py-10 text-center text-sm text-stone-400">Aucun média. Importez vos premières images ci-dessus.</p>
+    {% else %}
+        <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+            {% for media in medias %}
+                <div class="overflow-hidden rounded-2xl border border-stone-200 bg-white">
+                    <div class="aspect-[4/3] bg-stone-100">
+                        <img src="{{ media.thumbPublicPath ?? media.publicPath }}" alt="{{ media.alt }}" loading="lazy" class="h-full w-full object-cover">
+                    </div>
+                    <div class="p-4">
+                        <p class="truncate text-xs font-semibold text-stone-700" title="{{ media.originalName }}">{{ media.originalName }}</p>
+                        <p class="mt-0.5 text-[11px] text-stone-400">
+                            {{ media.width ? media.width ~ '×' ~ media.height ~ ' px · ' }}{{ (media.size / 1024)|round }} Ko
+                            {{ media.webpFilename ? '· WebP ✓' }}
+                        </p>
+
+                        <form method="post" action="{{ path('admin_media_alt', {id: media.id}) }}" class="mt-3 flex gap-1.5">
+                            <input type="hidden" name="_token" value="{{ csrf_token('admin') }}">
+                            <input type="text" name="alt" value="{{ media.alt }}" placeholder="Texte alternatif"
+                                   class="block w-full rounded-lg border border-stone-200 px-2.5 py-1.5 text-xs outline-none focus:border-emerald-600">
+                            <button type="submit" class="rounded-lg border border-stone-200 px-2.5 text-xs font-bold text-stone-500 hover:border-emerald-600 hover:text-emerald-700" title="Enregistrer l'alt">OK</button>
+                        </form>
+
+                        <div class="mt-3 flex items-center justify-between">
+                            <button type="button" data-copy="{{ media.bestPublicPath }}"
+                                    class="inline-flex items-center gap-1.5 rounded-lg bg-stone-900 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-stone-700">
+                                {{ icons.icon('copy', 'h-3.5 w-3.5') }} Copier l'URL
+                            </button>
+                            <form method="post" action="{{ path('admin_media_delete', {id: media.id}) }}" data-confirm="Supprimer définitivement ce média ?">
+                                <input type="hidden" name="_token" value="{{ csrf_token('admin') }}">
+                                <button type="submit" class="rounded-lg p-1.5 text-stone-400 transition hover:bg-red-50 hover:text-red-600" title="Supprimer">
+                                    {{ icons.icon('trash', 'h-4 w-4') }}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endblock %}

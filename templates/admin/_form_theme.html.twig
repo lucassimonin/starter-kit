@@ -1,0 +1,78 @@
+{% use 'form_div_layout.html.twig' %}
+
+{%- block form_row -%}
+  <div class="mb-4">
+    {{- form_label(form) -}}
+    {{- form_widget(form) -}}
+    {%- if form.vars.help -%}<p class="mt-1 text-xs text-stone-400">{{ form.vars.help }}</p>{%- endif -%}
+    {{- form_errors(form) -}}
+  </div>
+{%- endblock -%}
+
+{%- block form_label -%}
+  {%- if label is not same as(false) -%}
+    {%- if label is empty -%}{%- set label = name|humanize -%}{%- endif -%}
+    <label {% if id is defined %}for="{{ id }}"{% endif %} class="mb-1.5 block text-[13px] font-semibold text-stone-700">{{ label }}</label>
+  {%- endif -%}
+{%- endblock -%}
+
+{%- block form_widget_simple -%}
+  {%- set attr = attr|merge({class: (attr.class|default('') ~ ' block w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15')|trim}) -%}
+  {{- parent() -}}
+{%- endblock -%}
+
+{%- block textarea_widget -%}
+  {%- set attr = attr|merge({class: (attr.class|default('') ~ ' block w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15')|trim}) -%}
+  {{- parent() -}}
+{%- endblock -%}
+
+{%- block choice_widget_collapsed -%}
+  {%- set attr = attr|merge({class: (attr.class|default('') ~ ' block w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none transition focus:border-emerald-600')|trim}) -%}
+  {{- parent() -}}
+{%- endblock -%}
+
+{%- block checkbox_row -%}
+  <div class="mb-4 flex items-start gap-2.5">
+    {{- form_widget(form) -}}
+    <div>
+      <label for="{{ form.vars.id }}" class="text-[13px] font-semibold text-stone-700">{{ form.vars.label ?: form.vars.name|humanize }}</label>
+      {%- if form.vars.help -%}<p class="text-xs text-stone-400">{{ form.vars.help }}</p>{%- endif -%}
+    </div>
+    {{- form_errors(form) -}}
+  </div>
+{%- endblock -%}
+
+{%- block checkbox_widget -%}
+  {%- set attr = attr|merge({class: (attr.class|default('') ~ ' mt-0.5 h-4 w-4 rounded border-stone-300 accent-emerald-700')|trim}) -%}
+  {{- parent() -}}
+{%- endblock -%}
+
+{%- block form_errors -%}
+  {%- if errors|length > 0 -%}
+    <ul class="mt-1 text-xs font-medium text-red-600">
+      {%- for error in errors -%}<li>{{ error.message }}</li>{%- endfor -%}
+    </ul>
+  {%- endif -%}
+{%- endblock -%}
+
+{# Collections (cartes, catégories de menu…) : items + prototype pour le JS admin #}
+{%- block collection_widget -%}
+  {%- if prototype is defined and not prototype.rendered -%}
+    {%- set attr = attr|merge({'data-prototype': form_widget(prototype)|e('html_attr'), 'data-collection': '', 'data-index': form|length}) -%}
+  {%- endif -%}
+  <div {{ block('widget_container_attributes') }}>
+    <div data-collection-items class="space-y-3">
+      {%- for child in form -%}
+        <div data-collection-item class="relative rounded-lg border border-stone-200 bg-stone-50/80 p-4">
+          <button type="button" data-collection-remove class="absolute right-3 top-3 text-xs font-semibold text-stone-400 transition hover:text-red-600">Retirer</button>
+          {{ form_widget(child) }}
+        </div>
+      {%- endfor -%}
+    </div>
+    {%- if prototype is defined -%}
+      <button type="button" data-collection-add class="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-dashed border-stone-300 px-3 py-2 text-xs font-semibold text-stone-500 transition hover:border-emerald-600 hover:text-emerald-700">
+        + Ajouter un élément
+      </button>
+    {%- endif -%}
+  </div>
+{%- endblock -%}

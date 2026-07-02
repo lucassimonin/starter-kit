@@ -1,0 +1,156 @@
+{% extends 'admin/base.html.twig' %}
+{% import 'admin/_icons.html.twig' as icons %}
+
+{% block title %}{{ page.title }}{% endblock %}
+
+{% block page_title %}
+    <span class="flex items-center gap-2.5">
+        {{ page.title }}
+        {% if page.isHomepage %}{{ icons.icon('home', 'h-4 w-4 text-stone-400') }}{% endif %}
+        <span class="rounded-full px-2 py-0.5 text-[11px] font-bold {{ page.published ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' }}">
+            {{ page.published ? 'Publiée' : 'Brouillon' }}
+        </span>
+    </span>
+{% endblock %}
+
+{% block header_actions %}
+    <a href="{{ page.isHomepage ? path('front_homepage') : path('front_page', {slug: page.slug}) }}" target="_blank"
+       class="inline-flex items-center gap-1.5 rounded-lg border border-stone-300 px-3.5 py-2 text-[13px] font-bold text-stone-700 transition hover:bg-stone-50">
+        {{ icons.icon('eye', 'h-4 w-4') }} {{ page.published ? 'Voir la page' : 'Prévisualiser' }}
+    </a>
+{% endblock %}
+
+{% block content %}
+<div class="grid gap-8 xl:grid-cols-[1fr_340px]">
+
+    {# ================= Colonne blocs ================= #}
+    <div>
+        <div class="mb-4 flex items-center justify-between">
+            <h2 class="text-sm font-bold">Contenu de la page</h2>
+            <p class="text-xs text-stone-400">Glissez-déposez la poignée pour réorganiser — l'ordre est enregistré automatiquement</p>
+        </div>
+
+        {% if page.blocks is empty %}
+            <div class="rounded-2xl border-2 border-dashed border-stone-300 bg-white/50 px-6 py-14 text-center">
+                <p class="text-sm font-semibold text-stone-500">Page vide</p>
+                <p class="mt-1 text-sm text-stone-400">Ajoutez votre premier bloc depuis la palette à droite →</p>
+            </div>
+        {% endif %}
+
+        <div id="blocks-list" class="space-y-4"
+             data-reorder-url="{{ path('admin_page_reorder', {id: page.id}) }}"
+             data-csrf="{{ csrf_token('admin') }}">
+
+            {% for block in page.blocks %}
+                <section id="bloc-{{ block.id }}" data-block-id="{{ block.id }}"
+                         class="rounded-2xl border border-stone-200 bg-white shadow-sm {{ not block.enabled ? 'opacity-60' }}">
+
+                    <header class="flex items-center gap-2 px-4 py-3">
+                        <button type="button" data-drag-handle class="cursor-grab rounded-lg p-1.5 text-stone-300 transition hover:bg-stone-100 hover:text-stone-500 active:cursor-grabbing" title="Déplacer">
+                            {{ icons.icon('grip', 'h-5 w-5') }}
+                        </button>
+                        <div class="min-w-0">
+                            <p class="text-sm font-bold">{{ block_label(block.type) }}</p>
+                            <p class="truncate text-xs text-stone-400">{{ block.data.title|default(block.data.kicker|default('—')) }}</p>
+                        </div>
+
+                        <div class="ml-auto flex items-center gap-0.5">
+                            {% if not block.enabled %}
+                                <span class="mr-2 rounded-full bg-stone-200 px-2 py-0.5 text-[11px] font-bold text-stone-500">Masqué</span>
+                            {% endif %}
+
+                            <form method="post" action="{{ path('admin_block_toggle', {id: block.id}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('admin') }}">
+                                <button type="submit" class="rounded-lg p-2 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700" title="{{ block.enabled ? 'Masquer sur le site' : 'Afficher sur le site' }}">
+                                    {{ icons.icon(block.enabled ? 'eye' : 'eye-off', 'h-4 w-4') }}
+                                </button>
+                            </form>
+
+                            <form method="post" action="{{ path('admin_block_duplicate', {id: block.id}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('admin') }}">
+                                <button type="submit" class="rounded-lg p-2 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700" title="Dupliquer">
+                                    {{ icons.icon('copy', 'h-4 w-4') }}
+                                </button>
+                            </form>
+
+                            <form method="post" action="{{ path('admin_block_delete', {id: block.id}) }}" data-confirm="Supprimer ce bloc « {{ block_label(block.type) }} » ?">
+                                <input type="hidden" name="_token" value="{{ csrf_token('admin') }}">
+                                <button type="submit" class="rounded-lg p-2 text-stone-400 transition hover:bg-red-50 hover:text-red-600" title="Supprimer">
+                                    {{ icons.icon('trash', 'h-4 w-4') }}
+                                </button>
+                            </form>
+
+                            <button type="button" data-toggle="#form-bloc-{{ block.id }}"
+                                    class="ml-1 inline-flex items-center gap-1 rounded-lg border border-stone-200 px-3 py-1.5 text-xs font-bold text-stone-600 transition hover:border-emerald-600 hover:text-emerald-700">
+                                Modifier {{ icons.icon('chevron', 'h-3.5 w-3.5') }}
+                            </button>
+                        </div>
+                    </header>
+
+                    <div id="form-bloc-{{ block.id }}" class="hidden border-t border-stone-100 p-5">
+                        {% set bf = block_forms[block.id] %}
+                        {{ form_start(bf, {action: path('admin_block_save', {id: block.id}), method: 'POST'}) }}
+                            {{ form_widget(bf) }}
+                            <div class="mt-2 flex justify-end">
+                                <button type="submit" class="rounded-lg bg-emerald-700 px-4 py-2 text-[13px] font-bold text-white transition hover:bg-emerald-800">
+                                    Enregistrer le bloc
+                                </button>
+                            </div>
+                        {{ form_end(bf) }}
+                    </div>
+                </section>
+            {% endfor %}
+        </div>
+    </div>
+
+    {# ================= Colonne latérale ================= #}
+    <aside class="space-y-6">
+
+        {# Palette de blocs #}
+        <div class="rounded-2xl border border-stone-200 bg-white p-5">
+            <h2 class="text-sm font-bold">Ajouter un bloc</h2>
+            <div class="mt-4 space-y-2">
+                {% for type in block_types %}
+                    <form method="post" action="{{ path('admin_page_block_add', {id: page.id}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('admin') }}">
+                        <input type="hidden" name="type" value="{{ type.key }}">
+                        <button type="submit" class="group w-full rounded-xl border border-stone-200 px-4 py-3 text-left transition hover:border-emerald-600 hover:bg-emerald-50/40">
+                            <span class="flex items-center justify-between text-[13px] font-bold text-stone-800 group-hover:text-emerald-800">
+                                {{ type.label }}
+                                {{ icons.icon('plus', 'h-3.5 w-3.5 text-stone-300 group-hover:text-emerald-600') }}
+                            </span>
+                            <span class="mt-0.5 block text-xs leading-snug text-stone-400">{{ type.description }}</span>
+                        </button>
+                    </form>
+                {% endfor %}
+            </div>
+        </div>
+
+        {# Réglages + SEO #}
+        {{ form_start(settings_form) }}
+            <div class="rounded-2xl border border-stone-200 bg-white p-5">
+                <h2 class="mb-4 text-sm font-bold">Réglages de la page</h2>
+                {{ form_row(settings_form.title) }}
+                {{ form_row(settings_form.slug) }}
+                {{ form_row(settings_form.status) }}
+                {{ form_row(settings_form.isHomepage) }}
+            </div>
+
+            <div class="mt-6 rounded-2xl border border-stone-200 bg-white p-5">
+                <h2 class="mb-1 text-sm font-bold">SEO</h2>
+                <p class="mb-4 text-xs text-stone-400">Sitemap, redirections 301 et Open Graph sont gérés automatiquement.</p>
+                {{ form_row(settings_form.metaTitle) }}
+                {{ form_row(settings_form.metaDescription) }}
+                {{ form_row(settings_form.ogImage) }}
+                {{ form_row(settings_form.canonicalUrl) }}
+                {{ form_row(settings_form.noindex) }}
+                {{ form_row(settings_form.structuredData) }}
+            </div>
+
+            <button type="submit" class="mt-4 w-full rounded-xl bg-stone-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-stone-700">
+                Enregistrer les réglages
+            </button>
+        {{ form_end(settings_form) }}
+    </aside>
+</div>
+{% endblock %}

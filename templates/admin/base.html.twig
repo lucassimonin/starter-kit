@@ -1,0 +1,86 @@
+{% import 'admin/_icons.html.twig' as icons %}
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>{% block title %}Admin{% endblock %} — {{ setting('site_name', 'Starter CMS') }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('styles/app.css') }}">
+    {% block importmap %}{{ importmap('admin') }}{% endblock %}
+</head>
+<body class="h-full bg-stone-100 font-admin text-stone-900 antialiased">
+<div class="flex min-h-full">
+
+    {# ---- Sidebar ---- #}
+    <aside class="fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-stone-900 text-stone-300">
+        <div class="flex items-center gap-2.5 px-5 py-5">
+            <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-sm font-extrabold text-white">S</span>
+            <div class="leading-tight">
+                <p class="text-sm font-bold text-white">{{ setting('site_name', 'Starter CMS') }}</p>
+                <p class="text-[11px] text-stone-500">Administration</p>
+            </div>
+        </div>
+
+        {% set route = app.request.attributes.get('_route') ?? '' %}
+        {% macro navlink(path_name, label, icon_name, active) %}
+            {% import 'admin/_icons.html.twig' as icons %}
+            <a href="{{ path(path_name) }}"
+               class="mx-3 flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-semibold transition
+                      {{ active ? 'bg-emerald-600/15 text-emerald-400' : 'text-stone-400 hover:bg-white/5 hover:text-white' }}">
+                {{ icons.icon(icon_name, 'h-[18px] w-[18px] shrink-0') }} {{ label }}
+            </a>
+        {% endmacro %}
+
+        <nav class="mt-2 flex-1 space-y-1">
+            {{ _self.navlink('admin_dashboard', 'Tableau de bord', 'dashboard', route == 'admin_dashboard') }}
+            {{ _self.navlink('admin_pages', 'Pages', 'pages', route starts with 'admin_page') }}
+            {{ _self.navlink('admin_media', 'Médias', 'media', route starts with 'admin_media') }}
+            {{ _self.navlink('admin_navigation', 'Navigation', 'navigation', route starts with 'admin_navigation') }}
+            {{ _self.navlink('admin_redirects', 'Redirections', 'redirects', route starts with 'admin_redirect') }}
+            {{ _self.navlink('admin_settings', 'Réglages', 'settings', route starts with 'admin_settings') }}
+        </nav>
+
+        <div class="space-y-1 border-t border-white/10 px-0 py-3">
+            <a href="{{ path('front_homepage') }}" target="_blank" class="mx-3 flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-semibold text-stone-400 transition hover:bg-white/5 hover:text-white">
+                {{ icons.icon('external', 'h-[18px] w-[18px]') }} Voir le site
+            </a>
+            <a href="{{ path('admin_logout') }}" class="mx-3 flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-semibold text-stone-400 transition hover:bg-white/5 hover:text-white">
+                {{ icons.icon('logout', 'h-[18px] w-[18px]') }} Déconnexion
+            </a>
+        </div>
+    </aside>
+
+    {# ---- Contenu ---- #}
+    <div class="ml-60 flex-1">
+        <header class="sticky top-0 z-30 border-b border-stone-200 bg-white/90 backdrop-blur">
+            <div class="flex items-center justify-between px-8 py-4">
+                <h1 class="text-lg font-bold tracking-tight">{% block page_title %}{% endblock %}</h1>
+                <div class="flex items-center gap-3">{% block header_actions %}{% endblock %}</div>
+            </div>
+        </header>
+
+        <main class="px-8 py-8">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</div>
+
+{# ---- Flashs ---- #}
+<div class="fixed bottom-5 right-5 z-50 space-y-2" id="flashes">
+    {% for message in app.flashes('success') %}
+        <div data-flash class="flex items-center gap-2 rounded-xl bg-stone-900 px-4 py-3 text-sm font-medium text-white shadow-xl">
+            {{ icons.icon('check', 'h-4 w-4 text-emerald-400') }} {{ message }}
+        </div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div data-flash class="flex items-center gap-2 rounded-xl bg-red-600 px-4 py-3 text-sm font-medium text-white shadow-xl">
+            {{ message }}
+        </div>
+    {% endfor %}
+</div>
+</body>
+</html>
