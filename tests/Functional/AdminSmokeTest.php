@@ -42,4 +42,22 @@ class AdminSmokeTest extends DatabaseWebTestCase
         $this->assertSelectorExists('#blocks-list');
         $this->assertSelectorTextContains('body', 'Ajouter un bloc');
     }
+
+    public function testCollectionPrototypeIsValidHtml(): void
+    {
+        $this->logIn();
+        $crawler = $this->client->request('GET', '/admin/pages');
+        $link = $crawler->filter('table a')->first()->attr('href');
+        $crawler = $this->client->request('GET', $link);
+
+        // Prototype des collections (cartes, catégories de menu) :
+        // une fois décodé, il doit contenir du vrai HTML, pas des entités
+        // doublement échappées (régression : HTML affiché en texte à l'ajout)
+        $prototype = $crawler->filter('[data-collection]')->first()->attr('data-prototype');
+
+        $this->assertNotEmpty($prototype);
+        $this->assertStringContainsString('<', $prototype, 'Le prototype doit contenir du HTML décodable');
+        $this->assertStringNotContainsString('&lt;', $prototype, 'Le prototype ne doit pas être doublement échappé');
+        $this->assertStringContainsString('__name__', $prototype, 'Le prototype doit contenir le placeholder d\'index');
+    }
 }

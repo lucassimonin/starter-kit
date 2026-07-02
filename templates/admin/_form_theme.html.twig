@@ -57,8 +57,9 @@
 
 {# Collections (cartes, catégories de menu…) : items + prototype pour le JS admin #}
 {%- block collection_widget -%}
+  {#- Pas de |e ici : widget_container_attributes échappe déjà les attributs (sinon double échappement → HTML affiché en texte) -#}
   {%- if prototype is defined and not prototype.rendered -%}
-    {%- set attr = attr|merge({'data-prototype': form_widget(prototype)|e('html_attr'), 'data-collection': '', 'data-index': form|length}) -%}
+    {%- set attr = attr|merge({'data-prototype': form_widget(prototype), 'data-collection': '', 'data-index': form|length}) -%}
   {%- endif -%}
   <div {{ block('widget_container_attributes') }}>
     <div data-collection-items class="space-y-3">
