@@ -35,7 +35,7 @@
 {% endblock %}
 
 {# Header transparent si la page commence par un hero plein écran #}
-{% block header_transparent %}{{ page.blocks|filter(b => b.enabled)|first is not null and (page.blocks|filter(b => b.enabled)|first).type == 'hero' ? '1' : '0' }}{% endblock %}
+{% block header_transparent %}{% set first_block = page.blocks|filter(b => b.enabled)|first %}{{ first_block and first_block.type == 'hero' ? '1' : '0' }}{% endblock %}
 
 {% block body %}
     {% for block in page.blocks %}

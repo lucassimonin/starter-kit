@@ -7,6 +7,7 @@ use App\Service\SettingsProvider;
 use App\Twig\AppExtension;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 class AppExtensionTest extends TestCase
 {
@@ -19,6 +20,8 @@ class AppExtensionTest extends TestCase
             new BlockRegistry([]),
             new SettingsProvider($em),
             $em,
+            new RequestStack(),
+            'fr',
         );
     }
 
