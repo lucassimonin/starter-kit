@@ -64,6 +64,15 @@ a, button, input, textarea, select {
     margin: 0 0.75rem 0.35rem;
 }
 
+/* Zone d'édition de l'éditeur riche (admin) */
+.rte-area h2 { font-size: 1.25rem; font-weight: 700; margin: 0.8em 0 0.4em; }
+.rte-area h3 { font-size: 1.05rem; font-weight: 700; margin: 0.7em 0 0.3em; }
+.rte-area p { margin: 0.5em 0; }
+.rte-area a { color: #047857; text-decoration: underline; }
+.rte-area ul { list-style: disc; padding-left: 1.4em; margin: 0.5em 0; }
+.rte-area ol { list-style: decimal; padding-left: 1.4em; margin: 0.5em 0; }
+.rte-area:empty::before { content: "Rédigez votre contenu…"; color: #a8a29e; }
+
 /* Contenu HTML libre (bloc texte) */
 .prose-cms h2 { font-family: var(--font-display); font-size: 1.5rem; font-weight: 600; color: var(--color-forest); margin: 1.5em 0 0.5em; }
 .prose-cms h3 { font-family: var(--font-display); font-size: 1.2rem; font-weight: 600; color: var(--color-forest); margin: 1.2em 0 0.4em; }

@@ -12,16 +12,20 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/admin/navigation')]
 class NavigationAdminController extends AbstractController
 {
-    public function __construct(private readonly EntityManagerInterface $em)
-    {
+    /** @param list<string> $appLocales */
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+        private readonly array $appLocales,
+    ) {
     }
 
     #[Route('', name: 'admin_navigation')]
     public function index(): Response
     {
         return $this->render('admin/navigation/index.html.twig', [
-            'header_items' => $this->em->getRepository(NavigationItem::class)->findBy(['location' => NavigationItem::LOCATION_HEADER], ['position' => 'ASC']),
-            'footer_items' => $this->em->getRepository(NavigationItem::class)->findBy(['location' => NavigationItem::LOCATION_FOOTER], ['position' => 'ASC']),
+            'header_items' => $this->em->getRepository(NavigationItem::class)->findBy(['location' => NavigationItem::LOCATION_HEADER], ['locale' => 'ASC', 'position' => 'ASC']),
+            'footer_items' => $this->em->getRepository(NavigationItem::class)->findBy(['location' => NavigationItem::LOCATION_FOOTER], ['locale' => 'ASC', 'position' => 'ASC']),
+            'locales' => $this->appLocales,
         ]);
     }
 
@@ -64,10 +68,12 @@ class NavigationAdminController extends AbstractController
     private function hydrate(NavigationItem $item, Request $request): void
     {
         $location = (string) $request->request->get('location', NavigationItem::LOCATION_HEADER);
+        $locale = (string) $request->request->get('locale', $this->appLocales[0]);
 
         $item->setLabel(trim((string) $request->request->get('label', '')))
             ->setUrl(trim((string) $request->request->get('url', '')))
             ->setLocation(\in_array($location, [NavigationItem::LOCATION_HEADER, NavigationItem::LOCATION_FOOTER], true) ? $location : NavigationItem::LOCATION_HEADER)
+            ->setLocale(\in_array($locale, $this->appLocales, true) ? $locale : $this->appLocales[0])
             ->setPosition($request->request->getInt('position'))
             ->setIsButton($request->request->getBoolean('isButton'));
     }

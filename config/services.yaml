@@ -1,10 +1,19 @@
 parameters:
     app.upload_dir: '%kernel.project_dir%/public/uploads/media'
+    # Langues du site : la première est la langue par défaut (URLs sans préfixe).
+    # Les autres sont servies sous /{locale}/… — adapter par projet client.
+    app.locales: ['fr', 'en']
+    app.default_locale: 'fr'
+    # Motif de route pour les langues NON par défaut (ex: 'en|de')
+    app.extra_locales_pattern: 'en'
 
 services:
     _defaults:
         autowire: true
         autoconfigure: true
+        bind:
+            $appLocales: '%app.locales%'
+            $appDefaultLocale: '%app.default_locale%'
 
     _instanceof:
         App\Block\BlockTypeInterface:

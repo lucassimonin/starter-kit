@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initToggles();
     initCopyButtons();
     initFlashes();
+    initMediaPicker();
+    initRichTextEditors();
 });
 
 /* ---- Réorganisation des blocs (SortableJS) ---- */
@@ -117,6 +119,97 @@ function initFlashes() {
             flash.style.opacity = '0';
             setTimeout(() => flash.remove(), 450);
         }, 4000);
+    });
+}
+
+/* ---- Sélecteur de médias (bouton "Parcourir" des champs image) ---- */
+function initMediaPicker() {
+    const dialog = document.getElementById('mediaPicker');
+    if (!dialog) return;
+
+    const grid = dialog.querySelector('#mediaPickerGrid');
+    let targetInput = null;
+
+    document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('[data-media-picker]');
+        if (!btn) return;
+        e.preventDefault();
+
+        targetInput = btn.closest('[data-media-field]')?.querySelector('input');
+        grid.innerHTML = '<p class="col-span-full py-6 text-center text-sm text-stone-400">Chargement…</p>';
+        dialog.showModal();
+
+        try {
+            const medias = await (await fetch(dialog.dataset.endpoint)).json();
+            grid.innerHTML = '';
+
+            if (!medias.length) {
+                grid.innerHTML = '<p class="col-span-full py-6 text-center text-sm text-stone-400">Bibliothèque vide — importez des images via « Importer de nouvelles images ».</p>';
+                return;
+            }
+
+            medias.forEach((media) => {
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.className = 'group overflow-hidden rounded-xl border border-stone-200 text-left transition hover:border-emerald-600';
+
+                const img = document.createElement('img');
+                img.src = media.thumb;
+                img.alt = media.alt;
+                img.loading = 'lazy';
+                img.className = 'aspect-[4/3] w-full object-cover';
+
+                const name = document.createElement('span');
+                name.textContent = media.name;
+                name.className = 'block truncate px-2.5 py-2 text-[11px] font-semibold text-stone-600 group-hover:text-emerald-700';
+
+                card.append(img, name);
+                card.addEventListener('click', () => {
+                    if (targetInput) {
+                        targetInput.value = media.url;
+                        targetInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                    dialog.close();
+                });
+                grid.appendChild(card);
+            });
+        } catch {
+            grid.innerHTML = '<p class="col-span-full py-6 text-center text-sm text-red-600">Erreur de chargement de la bibliothèque.</p>';
+        }
+    });
+
+    dialog.querySelector('[data-close]')?.addEventListener('click', () => dialog.close());
+}
+
+/* ---- Éditeur de texte riche (bloc Texte libre, articles…) ---- */
+function initRichTextEditors() {
+    document.querySelectorAll('[data-rte]').forEach((wrapper) => {
+        const area = wrapper.querySelector('[data-rte-area]');
+        const textarea = wrapper.querySelector('textarea');
+        if (!area || !textarea) return;
+
+        area.innerHTML = textarea.value;
+        const sync = () => { textarea.value = area.innerHTML; };
+        area.addEventListener('input', sync);
+
+        wrapper.querySelectorAll('[data-rte-cmd]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const [cmd, arg] = btn.dataset.rteCmd.split(':');
+                area.focus();
+                if (cmd === 'createLink') {
+                    const url = window.prompt('URL du lien :', 'https://');
+                    if (url) document.execCommand('createLink', false, url);
+                } else if (cmd === 'formatBlock') {
+                    document.execCommand('formatBlock', false, arg);
+                } else {
+                    document.execCommand(cmd, false, null);
+                }
+                sync();
+            });
+        });
+
+        // Sécurité : synchronise juste avant l'envoi du formulaire
+        textarea.form?.addEventListener('submit', sync);
     });
 }
 

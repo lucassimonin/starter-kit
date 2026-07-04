@@ -20,6 +20,10 @@ security:
                 check_path: admin_login
                 default_target_path: admin_dashboard
                 enable_csrf: true
+            # Anti brute-force : 5 tentatives max par 15 minutes (par IP + identifiant)
+            login_throttling:
+                max_attempts: 5
+                interval: '15 minutes'
             logout:
                 path: admin_logout
                 target: admin_login

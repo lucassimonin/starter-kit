@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  tests:
+    name: Lint + PHPUnit + Behat
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: gd, intl, pdo_sqlite, sqlite3
+          coverage: none
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/composer
+          key: composer-${{ hashFiles('composer.json') }}
+
+      - name: Dépendances
+        run: composer install --no-interaction --no-progress
+
+      - name: Assets (importmap)
+        run: php bin/console importmap:install
+
+      - name: Lint Twig / YAML / Container
+        run: |
+          php bin/console lint:twig templates
+          php bin/console lint:yaml config
+          php bin/console lint:container
+
+      - name: PHPUnit (unitaires + fonctionnels, SQLite)
+        run: vendor/bin/phpunit
+
+      - name: Behat (acceptance)
+        run: vendor/bin/behat --format=progress

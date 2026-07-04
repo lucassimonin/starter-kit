@@ -6,6 +6,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     if (window.lucide?.createIcons) window.lucide.createIcons();
 
+    initCookieConsent();
+
     const $ = (s, r = document) => r.querySelector(s);
     const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
@@ -89,3 +91,60 @@ document.addEventListener('DOMContentLoaded', () => {
         reveals.forEach((el) => io.observe(el));
     }
 });
+
+/* =========================================================
+   Consentement cookies (RGPD / CNIL)
+   - Analytics chargé UNIQUEMENT après acceptation
+   - Choix (accepté ou refusé) conservé 6 mois
+   - « Gérer les cookies » dans le footer pour changer d'avis
+   ========================================================= */
+function initCookieConsent() {
+    const banner = document.getElementById('cookieBanner');
+
+    const getConsent = () => document.cookie.match(/(?:^|; )cookie_consent=([^;]*)/)?.[1];
+    const setConsent = (value) => {
+        document.cookie = `cookie_consent=${value};path=/;max-age=${60 * 60 * 24 * 182};SameSite=Lax`;
+    };
+
+    const loadAnalytics = (id) => {
+        if (!id || window.gtag) return;
+        const script = document.createElement('script');
+        script.async = true;
+        script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(id)}`;
+        document.head.appendChild(script);
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () { window.dataLayer.push(arguments); };
+        window.gtag('js', new Date());
+        window.gtag('config', id, { anonymize_ip: true });
+    };
+
+    if (banner) {
+        const analyticsId = banner.dataset.analytics;
+        const consent = getConsent();
+
+        if (consent === 'accepted') {
+            loadAnalytics(analyticsId);
+        } else if (!consent) {
+            banner.hidden = false;
+        }
+
+        banner.querySelector('#cookieAccept')?.addEventListener('click', () => {
+            setConsent('accepted');
+            banner.hidden = true;
+            loadAnalytics(analyticsId);
+        });
+
+        banner.querySelector('#cookieRefuse')?.addEventListener('click', () => {
+            setConsent('refused');
+            banner.hidden = true;
+        });
+    }
+
+    // Retrait du consentement : rouvre la barre (lien footer)
+    document.querySelectorAll('[data-cookie-settings]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            document.cookie = 'cookie_consent=;path=/;max-age=0';
+            if (banner) banner.hidden = false;
+        });
+    });
+}

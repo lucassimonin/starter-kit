@@ -1,6 +1,7 @@
 /.idea
 /.env.local
 /.env.*.local
+/.env.prod
 /var/
 /vendor/
 /public/assets/

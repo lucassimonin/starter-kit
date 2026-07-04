@@ -5,7 +5,7 @@ DOCKER=docker compose
 
 .PHONY: up stop logs install clean db.init db.fixture db.clean db.reset \
         asset.build asset.watch test test.unit test.functional behat test.all \
-        lint cc prod.build
+        lint cc prod.build prod.up prod.down prod.logs prod.shell prod.deploy
 
 ## —— Projet ————————————————————————————————————————————————————————
 up: ## Démarre MySQL + serveur Symfony (en tâche de fond)
@@ -89,3 +89,35 @@ cc: ## Vide le cache
 prod.build: ## Build de production (Tailwind minifié + assets compilés)
 	$(CONSOLE) tailwind:build --minify
 	$(CONSOLE) asset-map:compile
+
+## —— Déploiement Docker (FrankenPHP) ———————————————————————————————
+PROD_COMPOSE=docker compose --env-file .env.prod -f compose.prod.yaml
+
+prod.up: ## Build + démarre la prod (FrankenPHP worker + MySQL)
+	$(PROD_COMPOSE) up -d --build
+
+prod.down: ## Arrête la prod
+	$(PROD_COMPOSE) down
+
+prod.logs: ## Logs de la prod
+	$(PROD_COMPOSE) logs -f
+
+prod.shell: ## Shell dans le conteneur app
+	$(PROD_COMPOSE) exec app sh
+
+prod.deploy: ## Déploiement : git pull + rebuild + assets + schéma DB + cache + nettoyage
+	@echo "→ Récupération du code…"
+	git pull --ff-only
+	@echo "→ Reconstruction de l'image et redémarrage…"
+	$(PROD_COMPOSE) up -d --build
+	@echo "→ Compilation des assets (Tailwind minifié + AssetMapper)…"
+	$(PROD_COMPOSE) exec -T app php bin/console tailwind:build --minify
+	$(PROD_COMPOSE) exec -T app php bin/console asset-map:compile
+	@echo "→ Mise à jour du schéma de base de données…"
+	$(PROD_COMPOSE) exec -T app php bin/console doctrine:schema:update --force --complete --no-interaction
+	@echo "→ Vidage et réchauffage du cache…"
+	$(PROD_COMPOSE) exec -T app php bin/console cache:clear
+	$(PROD_COMPOSE) exec -T app php bin/console cache:warmup
+	@echo "→ Nettoyage des anciennes images…"
+	-docker image prune -f
+	@echo "✓ Déploiement terminé. Logs : make prod.logs"

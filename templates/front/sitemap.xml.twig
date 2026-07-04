@@ -1,10 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 {% for page in pages %}
     <url>
-        <loc>{{ app.request.schemeAndHttpHost }}{{ page.isHomepage ? '/' : '/' ~ page.slug }}</loc>
+        <loc>{{ app.request.schemeAndHttpHost }}{{ page_path(page) }}</loc>
         <lastmod>{{ page.updatedAt|date('Y-m-d') }}</lastmod>
         <priority>{{ page.isHomepage ? '1.0' : '0.7' }}</priority>
+{% set translations = page_translations(page) %}
+{% if translations|length > 1 %}
+{% for t in translations %}
+        <xhtml:link rel="alternate" hreflang="{{ t.locale }}" href="{{ app.request.schemeAndHttpHost }}{{ page_path(t) }}"/>
+{% endfor %}
+{% endif %}
+    </url>
+{% endfor %}
+{% if posts|length > 0 %}
+    <url>
+        <loc>{{ app.request.schemeAndHttpHost }}{{ path('front_blog') }}</loc>
+        <lastmod>{{ posts|first.updatedAt|date('Y-m-d') }}</lastmod>
+        <priority>0.8</priority>
+    </url>
+{% endif %}
+{% for post in posts %}
+    <url>
+        <loc>{{ app.request.schemeAndHttpHost }}{{ post_path(post) }}</loc>
+        <lastmod>{{ post.updatedAt|date('Y-m-d') }}</lastmod>
+        <priority>0.6</priority>
     </url>
 {% endfor %}
 </urlset>

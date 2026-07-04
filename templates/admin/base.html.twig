@@ -26,19 +26,24 @@
         </div>
 
         {% set route = app.request.attributes.get('_route') ?? '' %}
-        {% macro navlink(path_name, label, icon_name, active) %}
+        {% macro navlink(path_name, label, icon_name, active, badge = 0) %}
             {% import 'admin/_icons.html.twig' as icons %}
             <a href="{{ path(path_name) }}"
                class="mx-3 flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-semibold transition
                       {{ active ? 'bg-emerald-600/15 text-emerald-400' : 'text-stone-400 hover:bg-white/5 hover:text-white' }}">
                 {{ icons.icon(icon_name, 'h-[18px] w-[18px] shrink-0') }} {{ label }}
+                {% if badge > 0 %}
+                    <span class="ml-auto rounded-full bg-emerald-600 px-2 py-0.5 text-[11px] font-bold text-white">{{ badge }}</span>
+                {% endif %}
             </a>
         {% endmacro %}
 
         <nav class="mt-2 flex-1 space-y-1">
             {{ _self.navlink('admin_dashboard', 'Tableau de bord', 'dashboard', route == 'admin_dashboard') }}
             {{ _self.navlink('admin_pages', 'Pages', 'pages', route starts with 'admin_page') }}
+            {{ _self.navlink('admin_posts', 'Actualités', 'news', route starts with 'admin_post') }}
             {{ _self.navlink('admin_media', 'Médias', 'media', route starts with 'admin_media') }}
+            {{ _self.navlink('admin_messages', 'Messages', 'mail', route starts with 'admin_message', unread_messages()) }}
             {{ _self.navlink('admin_navigation', 'Navigation', 'navigation', route starts with 'admin_navigation') }}
             {{ _self.navlink('admin_redirects', 'Redirections', 'redirects', route starts with 'admin_redirect') }}
             {{ _self.navlink('admin_settings', 'Réglages', 'settings', route starts with 'admin_settings') }}
@@ -68,6 +73,19 @@
         </main>
     </div>
 </div>
+
+{# ---- Modale bibliothèque de médias (champs "Parcourir") ---- #}
+<dialog id="mediaPicker" data-endpoint="{{ path('admin_media_picker') }}"
+        class="m-auto w-full max-w-3xl rounded-2xl p-0 shadow-2xl backdrop:bg-stone-900/60">
+    <div class="flex items-center justify-between border-b border-stone-100 px-5 py-4">
+        <h2 class="text-sm font-bold">Choisir un média</h2>
+        <div class="flex items-center gap-3">
+            <a href="{{ path('admin_media') }}" target="_blank" class="text-xs font-semibold text-emerald-700 hover:underline">Importer de nouvelles images ↗</a>
+            <button type="button" data-close class="rounded-lg px-2.5 py-1 text-sm font-bold text-stone-400 hover:bg-stone-100 hover:text-stone-700">✕</button>
+        </div>
+    </div>
+    <div id="mediaPickerGrid" class="grid max-h-[60vh] grid-cols-2 gap-3 overflow-y-auto p-5 sm:grid-cols-3 md:grid-cols-4"></div>
+</dialog>
 
 {# ---- Flashs ---- #}
 <div class="fixed bottom-5 right-5 z-50 space-y-2" id="flashes">

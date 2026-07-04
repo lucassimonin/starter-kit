@@ -4,9 +4,13 @@ namespace App\Twig;
 
 use App\Block\BlockRegistry;
 use App\Entity\Block;
+use App\Entity\ContactMessage;
 use App\Entity\NavigationItem;
+use App\Entity\Page;
+use App\Entity\Post;
 use App\Service\SettingsProvider;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Twig\Environment;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
@@ -18,6 +22,8 @@ class AppExtension extends AbstractExtension
         private readonly BlockRegistry $registry,
         private readonly SettingsProvider $settings,
         private readonly EntityManagerInterface $em,
+        private readonly RequestStack $requestStack,
+        private readonly string $appDefaultLocale,
     ) {
     }
 
@@ -28,6 +34,10 @@ class AppExtension extends AbstractExtension
             new TwigFunction('setting', $this->settings->get(...)),
             new TwigFunction('nav_items', $this->navItems(...)),
             new TwigFunction('block_label', $this->blockLabel(...)),
+            new TwigFunction('unread_messages', $this->unreadMessages(...)),
+            new TwigFunction('page_path', $this->pagePath(...)),
+            new TwigFunction('post_path', $this->postPath(...)),
+            new TwigFunction('page_translations', $this->pageTranslations(...)),
         ];
     }
 
@@ -53,13 +63,56 @@ class AppExtension extends AbstractExtension
         ]);
     }
 
-    /** @return NavigationItem[] */
+    /** Liens de navigation dans la langue de la requête courante @return NavigationItem[] */
     public function navItems(string $location = NavigationItem::LOCATION_HEADER): array
     {
+        $locale = $this->requestStack->getCurrentRequest()?->getLocale() ?? $this->appDefaultLocale;
+
         return $this->em->getRepository(NavigationItem::class)->findBy(
-            ['location' => $location],
+            ['location' => $location, 'locale' => $locale],
             ['position' => 'ASC'],
         );
+    }
+
+    /** Chemin front d'une page selon sa langue (/, /en, /contact, /en/contact) */
+    public function pagePath(Page $page): string
+    {
+        $prefix = $page->getLocale() === $this->appDefaultLocale ? '' : '/'.$page->getLocale();
+
+        if ($page->isHomepage()) {
+            return $prefix ?: '/';
+        }
+
+        return $prefix.'/'.$page->getSlug();
+    }
+
+    /** Chemin front d'un article selon sa langue */
+    public function postPath(Post $post): string
+    {
+        $prefix = $post->getLocale() === $this->appDefaultLocale ? '' : '/'.$post->getLocale();
+
+        return $prefix.'/actualites/'.$post->getSlug();
+    }
+
+    /**
+     * Traductions d'une page (elle-même incluse), pour hreflang et sélecteur de langue.
+     *
+     * @return Page[]
+     */
+    public function pageTranslations(Page $page, bool $onlyPublished = true): array
+    {
+        $criteria = ['translationGroup' => $page->getTranslationGroup()];
+        if ($onlyPublished) {
+            $criteria['status'] = Page::STATUS_PUBLISHED;
+        }
+
+        return $this->em->getRepository(Page::class)->findBy($criteria, ['locale' => 'ASC']);
+    }
+
+    /** Nombre de messages de contact non lus (badge admin) */
+    public function unreadMessages(): int
+    {
+        return $this->em->getRepository(ContactMessage::class)->count(['isRead' => false]);
     }
 
     public function blockLabel(string $type): string

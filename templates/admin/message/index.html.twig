@@ -1,0 +1,65 @@
+{% extends 'admin/base.html.twig' %}
+{% import 'admin/_icons.html.twig' as icons %}
+
+{% block title %}Messages{% endblock %}
+{% block page_title %}
+    Messages reçus
+    {% if unread_count > 0 %}
+        <span class="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800">{{ unread_count }} non lu{{ unread_count > 1 ? 's' }}</span>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {% if messages is empty %}
+        <div class="rounded-2xl border-2 border-dashed border-stone-300 bg-white/50 px-6 py-14 text-center">
+            <p class="text-sm font-semibold text-stone-500">Aucun message</p>
+            <p class="mt-1 text-sm text-stone-400">Les envois du formulaire de contact apparaîtront ici, en plus de l'email.</p>
+        </div>
+    {% else %}
+        <div class="space-y-3">
+            {% for message in messages %}
+                <details class="group rounded-2xl border bg-white {{ message.isRead ? 'border-stone-200' : 'border-emerald-600/40 shadow-sm' }}">
+                    <summary class="flex cursor-pointer flex-wrap items-center gap-x-4 gap-y-1 px-5 py-4 [&::-webkit-details-marker]:hidden">
+                        {% if not message.isRead %}
+                            <span class="h-2 w-2 shrink-0 rounded-full bg-emerald-600" title="Non lu"></span>
+                        {% endif %}
+                        <span class="text-sm {{ message.isRead ? 'font-semibold text-stone-600' : 'font-bold' }}">{{ message.name }}</span>
+                        <span class="text-xs text-stone-400">{{ message.email }}</span>
+                        {% if message.subject %}
+                            <span class="rounded-full bg-stone-100 px-2 py-0.5 text-[11px] font-bold text-stone-600">{{ message.subject }}</span>
+                        {% endif %}
+                        {% if not message.isRead %}
+                            <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800">Non lu</span>
+                        {% endif %}
+                        <span class="ml-auto text-xs text-stone-400">{{ message.createdAt|date('d/m/Y H:i') }}</span>
+                        {{ icons.icon('chevron', 'h-4 w-4 text-stone-300 transition group-open:rotate-180') }}
+                    </summary>
+
+                    <div class="border-t border-stone-100 px-5 py-4">
+                        <p class="whitespace-pre-line text-sm leading-relaxed text-stone-700">{{ message.message }}</p>
+                        <p class="mt-3 text-xs text-stone-400">Email envoyé à : {{ message.recipient }}</p>
+
+                        <div class="mt-4 flex flex-wrap items-center gap-2">
+                            <a href="mailto:{{ message.email }}?subject=Re:%20{{ (message.subject ?: 'votre message')|url_encode }}"
+                               class="inline-flex items-center gap-1.5 rounded-lg bg-stone-900 px-3.5 py-2 text-xs font-bold text-white transition hover:bg-stone-700">
+                                Répondre par email
+                            </a>
+                            <form method="post" action="{{ path('admin_message_toggle', {id: message.id}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('admin') }}">
+                                <button type="submit" class="rounded-lg border border-stone-200 px-3.5 py-2 text-xs font-bold text-stone-600 transition hover:border-emerald-600 hover:text-emerald-700">
+                                    Marquer {{ message.isRead ? 'non lu' : 'lu' }}
+                                </button>
+                            </form>
+                            <form method="post" action="{{ path('admin_message_delete', {id: message.id}) }}" data-confirm="Supprimer définitivement ce message ?">
+                                <input type="hidden" name="_token" value="{{ csrf_token('admin') }}">
+                                <button type="submit" class="rounded-lg p-2 text-stone-400 transition hover:bg-red-50 hover:text-red-600" title="Supprimer">
+                                    {{ icons.icon('trash', 'h-4 w-4') }}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </details>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endblock %}

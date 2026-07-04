@@ -1,0 +1,34 @@
+.git
+.github
+.idea
+.DS_Store
+
+# Dépendances / artefacts régénérés dans l'image
+vendor
+node_modules
+var
+assets/vendor
+public/assets
+public/bundles
+public/uploads/media/*
+!public/uploads/media/.gitkeep
+var/tailwind
+
+# Env locaux et secrets
+.env.local
+.env.*.local
+.env.prod
+config/secrets/prod/prod.decrypt.private.php
+
+# Tests / outillage
+tests
+features
+behat.yml
+behat.yml.dist
+phpunit.xml
+phpunit.xml.dist
+.phpunit.cache
+
+# Docs / divers
+*.md
+!README.md

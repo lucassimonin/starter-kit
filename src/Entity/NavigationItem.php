@@ -26,6 +26,10 @@ class NavigationItem
     #[ORM\Column(length: 20)]
     private string $location = self::LOCATION_HEADER;
 
+    /** Langue du menu (fr, en…) */
+    #[ORM\Column(length: 5)]
+    private string $locale = 'fr';
+
     #[ORM\Column]
     private int $position = 0;
 
@@ -70,6 +74,18 @@ class NavigationItem
     public function setLocation(string $location): static
     {
         $this->location = $location;
+
+        return $this;
+    }
+
+    public function getLocale(): string
+    {
+        return $this->locale;
+    }
+
+    public function setLocale(string $locale): static
+    {
+        $this->locale = $locale;
 
         return $this;
     }

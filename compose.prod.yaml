@@ -1,0 +1,61 @@
+# =============================================================================
+# Déploiement de production : FrankenPHP (mode worker) + MySQL 8.
+#
+#   cp .env.prod.dist .env.prod        # puis renseigner les valeurs
+#   docker compose --env-file .env.prod -f compose.prod.yaml up -d --build
+#
+# HTTPS automatique : renseigner SERVER_NAME avec un vrai domaine pointant sur
+# le serveur, et ouvrir les ports 80 + 443 (Let's Encrypt via Caddy).
+# =============================================================================
+
+services:
+  app:
+    build:
+      context: .
+      target: prod
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      SERVER_NAME: ${SERVER_NAME:-localhost}
+      APP_ENV: prod
+      APP_DEBUG: 0
+      APP_SECRET: ${APP_SECRET:?APP_SECRET est requis}
+      DATABASE_URL: "mysql://${MYSQL_USER:-cms}:${MYSQL_PASSWORD:?MYSQL_PASSWORD est requis}@database:3306/${MYSQL_DATABASE:-cms_starter}?serverVersion=8.0.32&charset=utf8mb4"
+      MAILER_DSN: ${MAILER_DSN:?MAILER_DSN est requis}
+      DEFAULT_URI: ${DEFAULT_URI:-https://localhost}
+      # Mise en place du schéma au démarrage : schema | migrate | none
+      AUTO_DB_SETUP: ${AUTO_DB_SETUP:-schema}
+      # Mettre à 1 uniquement au tout premier déploiement pour charger la démo
+      LOAD_FIXTURES: ${LOAD_FIXTURES:-0}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"   # HTTP/3
+    volumes:
+      - caddy_data:/data          # certificats TLS
+      - caddy_config:/config
+      - media_data:/app/public/uploads/media   # médias uploadés (persistants)
+
+  database:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD est requis}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-cms_starter}
+      MYSQL_USER: ${MYSQL_USER:-cms}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD est requis}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  db_data:
+  media_data:
+  caddy_data:
+  caddy_config:

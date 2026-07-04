@@ -13,5 +13,13 @@ services:
       interval: 5s
       retries: 10
 
+  # Serveur mail de test : capture tous les emails envoyés en local.
+  # Interface web : http://localhost:8025
+  mailer:
+    image: axllent/mailpit
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Interface web
+
 volumes:
   db_data:

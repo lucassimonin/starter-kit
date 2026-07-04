@@ -16,6 +16,7 @@
             {label: 'Pages', value: counts.pages, href: path('admin_pages'), icon: 'pages'},
             {label: 'Publiées', value: counts.published, href: path('admin_pages'), icon: 'check'},
             {label: 'Médias', value: counts.media, href: path('admin_media'), icon: 'media'},
+            {label: 'Messages non lus', value: counts.unread_messages, href: path('admin_messages'), icon: 'mail'},
             {label: 'Redirections', value: counts.redirects, href: path('admin_redirects'), icon: 'redirects'},
         ] %}
         {% for card in cards %}

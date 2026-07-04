@@ -1,7 +1,7 @@
 {% extends 'front/base.html.twig' %}
 
 {% set site_name = setting('site_name', 'Mon site') %}
-{% set page_url = app.request.schemeAndHttpHost ~ (page.isHomepage ? '/' : '/' ~ page.slug) %}
+{% set page_url = app.request.schemeAndHttpHost ~ page_path(page) %}
 
 {% block head_title %}{{ page.metaTitle ?: (page.title ~ (setting('tagline') ? ' — ' ~ setting('tagline'))) }}{% endblock %}
 
@@ -9,6 +9,17 @@
     {% if page.metaDescription %}<meta name="description" content="{{ page.metaDescription }}">{% endif %}
     {% if page.noindex %}<meta name="robots" content="noindex, nofollow">{% endif %}
     <link rel="canonical" href="{{ page.canonicalUrl ?: page_url }}">
+
+    {# hreflang : versions linguistiques de cette page #}
+    {% set translations = page_translations(page) %}
+    {% if translations|length > 1 %}
+        {% for t in translations %}
+            <link rel="alternate" hreflang="{{ t.locale }}" href="{{ app.request.schemeAndHttpHost }}{{ page_path(t) }}">
+            {% if t.locale == 'fr' %}
+                <link rel="alternate" hreflang="x-default" href="{{ app.request.schemeAndHttpHost }}{{ page_path(t) }}">
+            {% endif %}
+        {% endfor %}
+    {% endif %}
 
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="{{ site_name }}">

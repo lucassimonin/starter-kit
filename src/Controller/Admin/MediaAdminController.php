@@ -20,6 +20,19 @@ class MediaAdminController extends AbstractController
     ) {
     }
 
+    #[Route('/picker', name: 'admin_media_picker')]
+    public function picker(): Response
+    {
+        $medias = $this->em->getRepository(Media::class)->findBy([], ['createdAt' => 'DESC']);
+
+        return $this->json(array_map(static fn (Media $media) => [
+            'url' => $media->getBestPublicPath(),
+            'thumb' => $media->getThumbPublicPath() ?? $media->getPublicPath(),
+            'alt' => $media->getAlt(),
+            'name' => $media->getOriginalName(),
+        ], $medias));
+    }
+
     #[Route('', name: 'admin_media')]
     public function index(): Response
     {

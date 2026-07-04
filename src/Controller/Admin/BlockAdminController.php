@@ -4,6 +4,7 @@ namespace App\Controller\Admin;
 
 use App\Block\BlockFormFactory;
 use App\Entity\Block;
+use App\Service\RevisionRecorder;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,6 +17,7 @@ class BlockAdminController extends AbstractController
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly BlockFormFactory $blockFormFactory,
+        private readonly RevisionRecorder $revisions,
     ) {
     }
 
@@ -26,6 +28,7 @@ class BlockAdminController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $this->revisions->record($block->getPage(), 'Avant modification du bloc '.$block->getType());
             $block->setData($form->getData());
             $block->getPage()?->setUpdatedAt(new \DateTimeImmutable());
             $this->em->flush();
@@ -41,6 +44,7 @@ class BlockAdminController extends AbstractController
     public function duplicate(Block $block, Request $request): Response
     {
         $this->checkCsrf($request);
+        $this->revisions->record($block->getPage(), 'Avant duplication du bloc '.$block->getType());
 
         $copy = new Block();
         $copy->setType($block->getType())
@@ -67,6 +71,7 @@ class BlockAdminController extends AbstractController
     public function toggle(Block $block, Request $request): Response
     {
         $this->checkCsrf($request);
+        $this->revisions->record($block->getPage(), ($block->isEnabled() ? 'Avant masquage' : 'Avant activation').' du bloc '.$block->getType());
         $block->setEnabled(!$block->isEnabled());
         $this->em->flush();
         $this->addFlash('success', $block->isEnabled() ? 'Bloc activé.' : 'Bloc masqué (conservé, non affiché sur le site).');
@@ -78,6 +83,7 @@ class BlockAdminController extends AbstractController
     public function delete(Block $block, Request $request): Response
     {
         $this->checkCsrf($request);
+        $this->revisions->record($block->getPage(), 'Avant suppression du bloc '.$block->getType());
         $pageId = $block->getPage()?->getId();
         $this->em->remove($block);
         $this->em->flush();

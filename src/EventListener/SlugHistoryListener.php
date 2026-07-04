@@ -3,11 +3,12 @@
 namespace App\EventListener;
 
 use App\Entity\Page;
+use App\Entity\Post;
 use App\Entity\Redirect;
 use Doctrine\ORM\Event\OnFlushEventArgs;
 
 /**
- * Quand le slug d'une page publiée change, crée automatiquement
+ * Quand le slug d'une page ou d'un article change, crée automatiquement
  * une redirection 301 de l'ancienne URL vers la nouvelle.
  */
 class SlugHistoryListener
@@ -18,7 +19,12 @@ class SlugHistoryListener
         $uow = $em->getUnitOfWork();
 
         foreach ($uow->getScheduledEntityUpdates() as $entity) {
-            if (!$entity instanceof Page) {
+            $prefix = match (true) {
+                $entity instanceof Page => '/',
+                $entity instanceof Post => '/actualites/',
+                default => null,
+            };
+            if (null === $prefix) {
                 continue;
             }
 
@@ -32,15 +38,15 @@ class SlugHistoryListener
                 continue;
             }
 
-            $existing = $em->getRepository(Redirect::class)->findOneBy(['source' => '/'.$old]);
+            $existing = $em->getRepository(Redirect::class)->findOneBy(['source' => $prefix.$old]);
             if ($existing) {
-                $existing->setTarget('/'.$new);
+                $existing->setTarget($prefix.$new);
                 $uow->recomputeSingleEntityChangeSet($em->getClassMetadata(Redirect::class), $existing);
                 continue;
             }
 
             $redirect = new Redirect();
-            $redirect->setSource('/'.$old)->setTarget('/'.$new)->setStatusCode(301);
+            $redirect->setSource($prefix.$old)->setTarget($prefix.$new)->setStatusCode(301);
             $em->persist($redirect);
             $uow->computeChangeSet($em->getClassMetadata(Redirect::class), $redirect);
         }

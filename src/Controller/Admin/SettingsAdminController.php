@@ -24,7 +24,11 @@ class SettingsAdminController extends AbstractController
         'footer_text' => ['Texte du pied de page', ''],
         'instagram' => ['Instagram (URL)', ''],
         'facebook' => ['Facebook (URL)', ''],
-        'analytics_id' => ['ID Analytics', 'Ex: G-XXXXXXX (Google Analytics 4) — vide = désactivé'],
+        'analytics_id' => ['ID Analytics', 'Ex: G-XXXXXXX (Google Analytics 4) — vide = désactivé, aucun cookie déposé'],
+        'cookie_banner_text' => ['Texte de la barre cookies', 'Vide = texte par défaut. La barre ne s\'affiche que si un ID Analytics est renseigné'],
+        'privacy_url' => ['Politique de confidentialité (URL)', 'Lien « En savoir plus » de la barre cookies — vide = /mentions-legales'],
+        'maintenance_mode' => ['Mode maintenance', 'Cochez pour fermer temporairement le site aux visiteurs (503) — l\'admin et les admins connectés gardent l\'accès'],
+        'maintenance_text' => ['Message de maintenance', 'Affiché aux visiteurs pendant la maintenance'],
     ];
 
     #[Route('', name: 'admin_settings')]

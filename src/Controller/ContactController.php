@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Block;
+use App\Entity\ContactMessage;
 use App\Service\SettingsProvider;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -49,6 +50,17 @@ class ContactController extends AbstractController
             $recipient = $block?->getData()['recipient'] ?? null;
         }
         $recipient = $recipient ?: $settings->get('contact_email', 'contact@example.com');
+
+        // Copie back-office : la demande est conservée en base quoi qu'il arrive,
+        // même si l'envoi d'email échoue (consultable dans Admin → Messages)
+        $contactMessage = (new ContactMessage())
+            ->setName($name)
+            ->setEmail($email)
+            ->setSubject($subject)
+            ->setMessage($message)
+            ->setRecipient($recipient);
+        $em->persist($contactMessage);
+        $em->flush();
 
         $mail = (new Email())
             ->from($settings->get('mailer_from', 'no-reply@'.$request->getHost()))

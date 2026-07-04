@@ -5,6 +5,13 @@
 {% block page_title %}Pages{% endblock %}
 
 {% block header_actions %}
+    <form method="post" action="{{ path('admin_page_import') }}" enctype="multipart/form-data" class="flex items-center gap-2">
+        <input type="hidden" name="_token" value="{{ csrf_token('admin') }}">
+        <label class="cursor-pointer rounded-lg border border-stone-300 px-3.5 py-2 text-[13px] font-bold text-stone-600 transition hover:border-emerald-600 hover:text-emerald-700">
+            Importer un JSON
+            <input type="file" name="file" accept="application/json,.json" class="hidden" onchange="this.form.submit()">
+        </label>
+    </form>
     <a href="{{ path('admin_page_new') }}" class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-3.5 py-2 text-[13px] font-bold text-white transition hover:bg-emerald-800">
         {{ icons.icon('plus', 'h-4 w-4') }} Nouvelle page
     </a>
@@ -32,7 +39,10 @@
                                 {% if page.isHomepage %}{{ icons.icon('home', 'h-3.5 w-3.5 text-stone-400') }}{% endif %}
                             </a>
                         </td>
-                        <td class="px-5 py-3.5 font-mono text-xs text-stone-500">/{{ page.isHomepage ? '' : page.slug }}</td>
+                        <td class="px-5 py-3.5">
+                            <span class="mr-1.5 rounded bg-stone-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-stone-500">{{ page.locale }}</span>
+                            <span class="font-mono text-xs text-stone-500">{{ page_path(page) }}</span>
+                        </td>
                         <td class="px-5 py-3.5">
                             <span class="rounded-full px-2 py-0.5 text-[11px] font-bold {{ page.published ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' }}">
                                 {{ page.published ? 'Publiée' : 'Brouillon' }}
@@ -42,10 +52,20 @@
                         <td class="px-5 py-3.5 text-xs text-stone-400">{{ page.updatedAt|date('d/m/Y H:i') }}</td>
                         <td class="px-5 py-3.5">
                             <div class="flex items-center justify-end gap-1">
-                                <a href="{{ page.isHomepage ? path('front_homepage') : path('front_page', {slug: page.slug}) }}" target="_blank"
-                                   class="rounded-lg p-2 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700" title="Voir la page">
+                                <a href="{{ page_path(page) }}{{ not page.published ? '?preview=' ~ page.previewToken }}" target="_blank"
+                                   class="rounded-lg p-2 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700" title="{{ page.published ? 'Voir la page' : 'Prévisualiser' }}">
                                     {{ icons.icon('external', 'h-4 w-4') }}
                                 </a>
+                                <a href="{{ path('admin_page_export', {id: page.id}) }}"
+                                   class="rounded-lg p-2 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700" title="Exporter en JSON (réutilisable dans un autre projet)">
+                                    {{ icons.icon('redirects', 'h-4 w-4') }}
+                                </a>
+                                <form method="post" action="{{ path('admin_page_duplicate', {id: page.id}) }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('admin') }}">
+                                    <button type="submit" class="rounded-lg p-2 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700" title="Dupliquer la page (blocs + SEO)">
+                                        {{ icons.icon('copy', 'h-4 w-4') }}
+                                    </button>
+                                </form>
                                 <form method="post" action="{{ path('admin_page_delete', {id: page.id}) }}" data-confirm="Supprimer la page « {{ page.title }} » et tous ses blocs ?">
                                     <input type="hidden" name="_token" value="{{ csrf_token('admin') }}">
                                     <button type="submit" class="rounded-lg p-2 text-stone-400 transition hover:bg-red-50 hover:text-red-600" title="Supprimer">

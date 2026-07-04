@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>Actualités — {{ setting('site_name', 'Mon site') }}</title>
+        <link>{{ app.request.schemeAndHttpHost }}{{ path('front_blog') }}</link>
+        <description>{{ setting('tagline', 'Les dernières actualités') }}</description>
+        <language>fr</language>
+        <atom:link href="{{ app.request.schemeAndHttpHost }}{{ path('front_blog_rss') }}" rel="self" type="application/rss+xml"/>
+        {% for post in posts %}
+        <item>
+            <title>{{ post.title }}</title>
+            <link>{{ app.request.schemeAndHttpHost }}{{ post_path(post) }}</link>
+            <guid>{{ app.request.schemeAndHttpHost }}{{ post_path(post) }}</guid>
+            <pubDate>{{ post.publishedAt|date('r') }}</pubDate>
+            {% if post.excerpt %}<description>{{ post.excerpt }}</description>{% endif %}
+            {% if post.category %}<category>{{ post.category.name }}</category>{% endif %}
+        </item>
+        {% endfor %}
+    </channel>
+</rss>

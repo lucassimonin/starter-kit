@@ -14,7 +14,14 @@
 {% endblock %}
 
 {% block header_actions %}
-    <a href="{{ page.isHomepage ? path('front_homepage') : path('front_page', {slug: page.slug}) }}" target="_blank"
+    {% if not page.published %}
+        <button type="button" data-copy="{{ page_path(page) }}?preview={{ page.previewToken }}"
+                class="inline-flex items-center gap-1.5 rounded-lg border border-stone-300 px-3.5 py-2 text-[13px] font-bold text-stone-700 transition hover:bg-stone-50"
+                title="Lien de prévisualisation à partager avec le client (aucun compte requis)">
+            {{ icons.icon('copy', 'h-4 w-4') }} Lien de prévisualisation
+        </button>
+    {% endif %}
+    <a href="{{ page_path(page) }}{{ not page.published ? '?preview=' ~ page.previewToken }}" target="_blank"
        class="inline-flex items-center gap-1.5 rounded-lg border border-stone-300 px-3.5 py-2 text-[13px] font-bold text-stone-700 transition hover:bg-stone-50">
         {{ icons.icon('eye', 'h-4 w-4') }} {{ page.published ? 'Voir la page' : 'Prévisualiser' }}
     </a>
@@ -126,19 +133,67 @@
             </div>
         </div>
 
+        {# Traductions #}
+        <div class="rounded-2xl border border-stone-200 bg-white p-5">
+            <h2 class="text-sm font-bold">Traductions</h2>
+            <ul class="mt-3 space-y-2">
+                {% for translation in translations %}
+                    <li class="flex items-center justify-between rounded-lg {{ translation.id == page.id ? 'bg-emerald-50' : 'bg-stone-50' }} px-3 py-2">
+                        <span class="flex items-center gap-2 text-[13px]">
+                            <span class="rounded bg-white px-1.5 py-0.5 text-[10px] font-bold uppercase text-stone-500 ring-1 ring-stone-200">{{ translation.locale }}</span>
+                            {% if translation.id == page.id %}
+                                <span class="font-bold text-emerald-800">Cette page</span>
+                            {% else %}
+                                <a href="{{ path('admin_page_edit', {id: translation.id}) }}" class="font-semibold text-stone-700 hover:text-emerald-700">{{ translation.title|length > 24 ? translation.title|slice(0, 24) ~ '…' : translation.title }}</a>
+                            {% endif %}
+                        </span>
+                        <span class="rounded-full px-2 py-0.5 text-[10px] font-bold {{ translation.published ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' }}">
+                            {{ translation.published ? 'Publiée' : 'Brouillon' }}
+                        </span>
+                    </li>
+                {% endfor %}
+            </ul>
+            {% set existing_locales = translations|map(t => t.locale) %}
+            {% for locale in locales|filter(l => l not in existing_locales) %}
+                <form method="post" action="{{ path('admin_page_translate', {id: page.id, locale: locale}) }}" class="mt-2">
+                    <input type="hidden" name="_token" value="{{ csrf_token('admin') }}">
+                    <button type="submit" class="w-full rounded-lg border border-dashed border-stone-300 px-3 py-2 text-xs font-semibold text-stone-500 transition hover:border-emerald-600 hover:text-emerald-700">
+                        + Créer la version {{ locale|upper }} (copie à traduire)
+                    </button>
+                </form>
+            {% endfor %}
+        </div>
+
         {# Réglages + SEO #}
         {{ form_start(settings_form) }}
             <div class="rounded-2xl border border-stone-200 bg-white p-5">
                 <h2 class="mb-4 text-sm font-bold">Réglages de la page</h2>
                 {{ form_row(settings_form.title) }}
                 {{ form_row(settings_form.slug) }}
+                {{ form_row(settings_form.locale) }}
                 {{ form_row(settings_form.status) }}
                 {{ form_row(settings_form.isHomepage) }}
             </div>
 
             <div class="mt-6 rounded-2xl border border-stone-200 bg-white p-5">
-                <h2 class="mb-1 text-sm font-bold">SEO</h2>
-                <p class="mb-4 text-xs text-stone-400">Sitemap, redirections 301 et Open Graph sont gérés automatiquement.</p>
+                <div class="mb-1 flex items-center justify-between">
+                    <h2 class="text-sm font-bold">SEO</h2>
+                    <span class="rounded-full px-2.5 py-0.5 text-[11px] font-bold
+                        {{ seo_score >= 80 ? 'bg-emerald-100 text-emerald-800' : (seo_score >= 50 ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-700') }}">
+                        {{ seo_score }}/100
+                    </span>
+                </div>
+                <p class="mb-3 text-xs text-stone-400">Sitemap, redirections 301 et Open Graph sont gérés automatiquement.</p>
+
+                {# Checklist SEO #}
+                <ul class="mb-5 space-y-1.5 rounded-xl bg-stone-50 p-3">
+                    {% for check in seo_checks %}
+                        <li class="flex items-start gap-2 text-xs {{ check.ok ? 'text-stone-500' : 'font-medium text-amber-700' }}">
+                            <span class="mt-1 h-1.5 w-1.5 shrink-0 rounded-full {{ check.ok ? 'bg-emerald-500' : 'bg-amber-500' }}"></span>
+                            {{ check.label }}
+                        </li>
+                    {% endfor %}
+                </ul>
                 {{ form_row(settings_form.metaTitle) }}
                 {{ form_row(settings_form.metaDescription) }}
                 {{ form_row(settings_form.ogImage) }}
@@ -151,6 +206,31 @@
                 Enregistrer les réglages
             </button>
         {{ form_end(settings_form) }}
+
+        {# Historique des modifications #}
+        {% if revisions|length > 0 %}
+            <div class="rounded-2xl border border-stone-200 bg-white p-5">
+                <h2 class="text-sm font-bold">Historique</h2>
+                <p class="mt-1 text-xs text-stone-400">États du contenu avant chaque modification — restaurez en un clic (20 derniers conservés).</p>
+                <ul class="mt-3 space-y-1.5">
+                    {% for revision in revisions %}
+                        <li class="flex items-center justify-between gap-2 rounded-lg bg-stone-50 px-3 py-2">
+                            <span class="min-w-0">
+                                <span class="block truncate text-xs font-semibold text-stone-600">{{ revision.label }}</span>
+                                <span class="text-[11px] text-stone-400">{{ revision.createdAt|date('d/m/Y H:i') }} · {{ revision.snapshot|length }} bloc(s)</span>
+                            </span>
+                            <form method="post" action="{{ path('admin_page_revision_restore', {id: page.id, revisionId: revision.id}) }}"
+                                  data-confirm="Restaurer le contenu tel qu'il était le {{ revision.createdAt|date('d/m/Y à H:i') }} ? L'état actuel sera lui-même sauvegardé dans l'historique.">
+                                <input type="hidden" name="_token" value="{{ csrf_token('admin') }}">
+                                <button type="submit" class="shrink-0 rounded-lg border border-stone-200 px-2.5 py-1.5 text-[11px] font-bold text-stone-600 transition hover:border-emerald-600 hover:text-emerald-700">
+                                    Restaurer
+                                </button>
+                            </form>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
     </aside>
 </div>
 {% endblock %}

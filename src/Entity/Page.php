@@ -8,6 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'page')]
+#[ORM\UniqueConstraint(name: 'uniq_page_slug_locale', columns: ['slug', 'locale'])]
 #[ORM\HasLifecycleCallbacks]
 class Page
 {
@@ -22,7 +23,8 @@ class Page
     #[ORM\Column(length: 255)]
     private string $title = '';
 
-    #[ORM\Column(length: 255, unique: true)]
+    /** Unique par langue (contrainte slug+locale) */
+    #[ORM\Column(length: 255)]
     private string $slug = '';
 
     #[ORM\Column(length: 20)]
@@ -30,6 +32,18 @@ class Page
 
     #[ORM\Column]
     private bool $isHomepage = false;
+
+    /** Langue de la page (fr, en…) */
+    #[ORM\Column(length: 5)]
+    private string $locale = 'fr';
+
+    /** Identifiant commun aux traductions d'une même page (hreflang, sélecteur de langue) */
+    #[ORM\Column(length: 32)]
+    private string $translationGroup = '';
+
+    /** Jeton du lien de prévisualisation partageable (brouillons) */
+    #[ORM\Column(length: 64)]
+    private string $previewToken = '';
 
     // --- SEO ---
 
@@ -70,6 +84,8 @@ class Page
         $this->blocks = new ArrayCollection();
         $this->createdAt = new \DateTimeImmutable();
         $this->updatedAt = new \DateTimeImmutable();
+        $this->translationGroup = bin2hex(random_bytes(8));
+        $this->previewToken = bin2hex(random_bytes(16));
     }
 
     #[ORM\PreUpdate]
@@ -122,6 +138,42 @@ class Page
     public function isPublished(): bool
     {
         return self::STATUS_PUBLISHED === $this->status;
+    }
+
+    public function getLocale(): string
+    {
+        return $this->locale;
+    }
+
+    public function setLocale(string $locale): static
+    {
+        $this->locale = $locale;
+
+        return $this;
+    }
+
+    public function getTranslationGroup(): string
+    {
+        return $this->translationGroup;
+    }
+
+    public function setTranslationGroup(string $translationGroup): static
+    {
+        $this->translationGroup = $translationGroup;
+
+        return $this;
+    }
+
+    public function getPreviewToken(): string
+    {
+        return $this->previewToken;
+    }
+
+    public function setPreviewToken(string $previewToken): static
+    {
+        $this->previewToken = $previewToken;
+
+        return $this;
     }
 
     public function isHomepage(): bool

@@ -23,3 +23,16 @@ Feature: Site public
     When I am on "/sitemap.xml"
     Then the response status code should be 200
     And the response should contain "urlset"
+
+  Scenario: The English homepage is served under /en
+    When I am on "/en"
+    Then the response status code should be 200
+    And I should see "Book a table"
+
+  Scenario: A visitor sends a contact message
+    When I am on "/"
+    And I fill in "name" with "Jean Dupont"
+    And I fill in "email" with "jean@exemple.fr"
+    And I fill in "message" with "Bonjour, je souhaite plus d'informations sur vos services."
+    And I press "Envoyer"
+    Then I should see "Merci"

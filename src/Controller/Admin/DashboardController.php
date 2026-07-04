@@ -2,6 +2,7 @@
 
 namespace App\Controller\Admin;
 
+use App\Entity\ContactMessage;
 use App\Entity\Media;
 use App\Entity\Page;
 use App\Entity\Redirect;
@@ -25,6 +26,7 @@ class DashboardController extends AbstractController
                 'published' => $em->getRepository(Page::class)->count(['status' => Page::STATUS_PUBLISHED]),
                 'media' => $em->getRepository(Media::class)->count([]),
                 'redirects' => $em->getRepository(Redirect::class)->count([]),
+                'unread_messages' => $em->getRepository(ContactMessage::class)->count(['isRead' => false]),
             ],
         ]);
     }

@@ -3,7 +3,7 @@
 namespace App\Block\Type;
 
 use App\Block\AbstractBlockType;
-use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+use App\Form\RichTextType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 
@@ -29,11 +29,10 @@ class RichTextBlock extends AbstractBlockType
         $builder
             ->add('kicker', TextType::class, ['label' => 'Surtitre', 'required' => false])
             ->add('title', TextType::class, ['label' => 'Titre', 'required' => false])
-            ->add('content', TextareaType::class, [
-                'label' => 'Contenu (HTML)',
+            ->add('content', RichTextType::class, [
+                'label' => 'Contenu',
                 'required' => false,
-                'attr' => ['rows' => 12],
-                'help' => 'Balises autorisées : p, h2-h4, strong, em, a, ul, ol, li, br, img',
+                'help' => 'Titres, gras, listes et liens via la barre d\'outils',
             ]);
     }
 

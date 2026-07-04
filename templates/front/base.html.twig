@@ -17,15 +17,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     {{ importmap('app') }}
 
-    {% if setting('analytics_id') %}
-        <script async src="https://www.googletagmanager.com/gtag/js?id={{ setting('analytics_id') }}"></script>
-        <script>
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', '{{ setting('analytics_id') }}');
-        </script>
-    {% endif %}
+    {# Analytics : chargé par assets/app.js UNIQUEMENT après consentement (barre cookies) #}
 </head>
 <body class="bg-sand font-body text-ink antialiased">
 
@@ -63,6 +55,23 @@
             {% for item in header_ctas %}
                 <a href="{{ item.url }}" class="nav-cta rounded-journal border border-sand/30 bg-sand/10 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-sand backdrop-blur-sm transition hover:bg-sand hover:text-forest">{{ item.label }}</a>
             {% endfor %}
+
+            {# Sélecteur de langue (si la page a des traductions publiées) #}
+            {% if page is defined %}
+                {% set translations = page_translations(page) %}
+                {% if translations|length > 1 %}
+                    <span class="flex items-center gap-1.5 text-xs font-semibold uppercase">
+                        {% for t in translations %}
+                            {% if t.locale == page.locale %}
+                                <span class="nav-link opacity-100">{{ t.locale }}</span>
+                            {% else %}
+                                <a href="{{ page_path(t) }}" hreflang="{{ t.locale }}" class="nav-link opacity-60 transition hover:opacity-100">{{ t.locale }}</a>
+                            {% endif %}
+                            {{ not loop.last ? '·' }}
+                        {% endfor %}
+                    </span>
+                {% endif %}
+            {% endif %}
         </div>
 
         <button id="mobileMenuBtn" type="button" class="col-start-3 justify-self-end rounded-journal border border-line bg-sand/80 p-2.5 text-forest md:hidden" aria-label="Menu" aria-expanded="false">
@@ -89,7 +98,12 @@
 
 {# ================= Footer ================= #}
 <footer class="border-t border-line py-8 text-center text-xs text-ink/45">
-    <p>© <span id="year"></span> {{ setting('footer_text', site_name) }}</p>
+    <p>
+        © <span id="year"></span> {{ setting('footer_text', site_name) }}
+        {% if setting('analytics_id') %}
+            · <button type="button" data-cookie-settings class="underline decoration-ink/20 hover:text-forest">Gérer les cookies</button>
+        {% endif %}
+    </p>
     {% set footer_items = nav_items('footer') %}
     {% if footer_items|length > 0 or setting('instagram') or setting('facebook') %}
         <p class="mt-1 space-x-2">
@@ -101,5 +115,31 @@
         </p>
     {% endif %}
 </footer>
+
+{# ================= Barre de consentement cookies =================
+   Affichée uniquement si un ID Analytics est configuré (sinon aucun
+   cookie tiers n'est déposé). Analytics n'est chargé qu'après accord. #}
+{% if setting('analytics_id') %}
+    <div id="cookieBanner" data-analytics="{{ setting('analytics_id') }}" hidden
+         class="fixed inset-x-0 bottom-0 z-[70] border-t border-line bg-sand/95 backdrop-blur"
+         role="dialog" aria-live="polite" aria-label="Consentement aux cookies">
+        <div class="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <p class="text-sm leading-relaxed text-ink/75">
+                {{ setting('cookie_banner_text', "Nous utilisons des cookies de mesure d'audience pour améliorer le site. Vous pouvez accepter ou refuser, votre choix est conservé 6 mois.") }}
+                <a href="{{ setting('privacy_url', '/mentions-legales') }}" class="underline decoration-ink/30 hover:text-forest">En savoir plus</a>
+            </p>
+            <div class="flex shrink-0 gap-3">
+                <button type="button" id="cookieRefuse"
+                        class="rounded-journal border border-line px-5 py-2.5 text-sm font-semibold text-ink/70 transition hover:border-forest hover:text-forest">
+                    Refuser
+                </button>
+                <button type="button" id="cookieAccept"
+                        class="rounded-journal bg-forest px-5 py-2.5 text-sm font-semibold text-sand transition hover:bg-earth">
+                    Accepter
+                </button>
+            </div>
+        </div>
+    </div>
+{% endif %}
 </body>
 </html>

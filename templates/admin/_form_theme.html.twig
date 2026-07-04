@@ -55,6 +55,39 @@
   {%- endif -%}
 {%- endblock -%}
 
+{# Champ image avec bouton ouvrant la bibliothèque de médias (admin.js) #}
+{%- block media_picker_widget -%}
+  <div data-media-field class="flex gap-2">
+    {{- block('form_widget_simple') -}}
+    <button type="button" data-media-picker
+            class="shrink-0 rounded-lg border border-stone-300 px-3.5 py-2 text-xs font-bold text-stone-600 transition hover:border-emerald-600 hover:text-emerald-700">
+      Parcourir
+    </button>
+  </div>
+{%- endblock -%}
+
+{# Éditeur de texte riche (contenteditable synchronisé avec le textarea, admin.js) #}
+{%- block rich_text_editor_widget -%}
+  <div data-rte class="overflow-hidden rounded-lg border border-stone-300 bg-white">
+    <div class="flex flex-wrap gap-1 border-b border-stone-200 bg-stone-50 px-2 py-1.5">
+      <button type="button" data-rte-cmd="formatBlock:h2" class="rounded px-2 py-1 text-xs font-bold text-stone-600 hover:bg-stone-200" title="Titre">H2</button>
+      <button type="button" data-rte-cmd="formatBlock:h3" class="rounded px-2 py-1 text-xs font-bold text-stone-600 hover:bg-stone-200" title="Sous-titre">H3</button>
+      <button type="button" data-rte-cmd="formatBlock:p" class="rounded px-2 py-1 text-xs font-bold text-stone-600 hover:bg-stone-200" title="Paragraphe">¶</button>
+      <span class="mx-1 w-px bg-stone-200"></span>
+      <button type="button" data-rte-cmd="bold" class="rounded px-2 py-1 text-xs font-black text-stone-600 hover:bg-stone-200" title="Gras">G</button>
+      <button type="button" data-rte-cmd="italic" class="rounded px-2 py-1 text-xs font-bold italic text-stone-600 hover:bg-stone-200" title="Italique">I</button>
+      <span class="mx-1 w-px bg-stone-200"></span>
+      <button type="button" data-rte-cmd="insertUnorderedList" class="rounded px-2 py-1 text-xs font-bold text-stone-600 hover:bg-stone-200" title="Liste à puces">• Liste</button>
+      <button type="button" data-rte-cmd="insertOrderedList" class="rounded px-2 py-1 text-xs font-bold text-stone-600 hover:bg-stone-200" title="Liste numérotée">1. Liste</button>
+      <span class="mx-1 w-px bg-stone-200"></span>
+      <button type="button" data-rte-cmd="createLink" class="rounded px-2 py-1 text-xs font-bold text-stone-600 hover:bg-stone-200" title="Insérer un lien">Lien</button>
+      <button type="button" data-rte-cmd="removeFormat" class="rounded px-2 py-1 text-xs font-bold text-stone-400 hover:bg-stone-200" title="Effacer la mise en forme">Effacer</button>
+    </div>
+    <div data-rte-area contenteditable="true" class="rte-area min-h-40 max-h-[32rem] overflow-y-auto px-4 py-3 text-sm outline-none"></div>
+    <div class="hidden">{{ block('textarea_widget') }}</div>
+  </div>
+{%- endblock -%}
+
 {# Collections (cartes, catégories de menu…) : items + prototype pour le JS admin #}
 {%- block collection_widget -%}
   {#- Pas de |e ici : widget_container_attributes échappe déjà les attributs (sinon double échappement → HTML affiché en texte) -#}

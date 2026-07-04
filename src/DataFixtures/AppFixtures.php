@@ -5,6 +5,8 @@ namespace App\DataFixtures;
 use App\Entity\Block;
 use App\Entity\NavigationItem;
 use App\Entity\Page;
+use App\Entity\Post;
+use App\Entity\PostCategory;
 use App\Entity\Setting;
 use App\Entity\User;
 use Doctrine\Bundle\FixturesBundle\Fixture;
@@ -28,6 +30,7 @@ class AppFixtures extends Fixture
         $this->loadNavigation($manager);
         $this->loadHomepage($manager);
         $this->loadLegalPage($manager);
+        $this->loadPosts($manager);
 
         $manager->flush();
     }
@@ -52,6 +55,9 @@ class AppFixtures extends Fixture
             'phone' => '06 81 37 82 75',
             'address' => "1348 avenue de la Mer-Raymond Dugrand, 34000 Montpellier",
             'footer_text' => 'BIVOUAK CAFÉ — Marché du Lez, Montpellier',
+            // ID de démo : rend la barre cookies visible dès l'installation.
+            // Remplacer par le vrai ID GA4 du client (ou vider pour désactiver).
+            'analytics_id' => 'G-DEMO000000',
         ];
 
         foreach ($settings as $key => $value) {
@@ -76,9 +82,27 @@ class AppFixtures extends Fixture
                 ->setPosition($position)->setIsButton($isButton));
         }
 
+        // Menu de la version anglaise
+        $headerEn = [
+            ['The place', '#concept', false],
+            ['Menu', '#menu', false],
+            ['Contact', '#contact', false],
+            ['Book a table', '#contact', true],
+        ];
+
+        foreach ($headerEn as $position => [$label, $url, $isButton]) {
+            $manager->persist((new NavigationItem())
+                ->setLabel($label)->setUrl($url)->setLocale('en')
+                ->setLocation(NavigationItem::LOCATION_HEADER)
+                ->setPosition($position)->setIsButton($isButton));
+        }
+
+        $manager->persist((new NavigationItem())
+            ->setLabel('Actualités')->setUrl('/actualites')
+            ->setLocation(NavigationItem::LOCATION_FOOTER)->setPosition(0));
         $manager->persist((new NavigationItem())
             ->setLabel('Mentions légales')->setUrl('/mentions-legales')
-            ->setLocation(NavigationItem::LOCATION_FOOTER)->setPosition(0));
+            ->setLocation(NavigationItem::LOCATION_FOOTER)->setPosition(1));
     }
 
     private function loadHomepage(ObjectManager $manager): void
@@ -218,6 +242,62 @@ class AppFixtures extends Fixture
         }
 
         $manager->persist($page);
+        $this->loadEnglishHomepage($manager, $page);
+    }
+
+    /** Version anglaise (réduite) de la homepage — démontre hreflang + sélecteur de langue */
+    private function loadEnglishHomepage(ObjectManager $manager, Page $frenchHomepage): void
+    {
+        $page = new Page();
+        $page->setTitle('BIVOUAK CAFÉ — Concept restaurant at Marché du Lez')
+            ->setSlug('home')
+            ->setLocale('en')
+            ->setTranslationGroup($frenchHomepage->getTranslationGroup())
+            ->setIsHomepage(true)
+            ->setStatus(Page::STATUS_PUBLISHED)
+            ->setMetaTitle('BIVOUAK CAFÉ — Concept restaurant at Marché du Lez, Montpellier')
+            ->setMetaDescription('Bivouak Café — concept restaurant at the Marché du Lez, Montpellier. Canteen, café racer, workshop & road trip. Open 7 days a week.');
+
+        $blocks = [
+            ['hero', [
+                'kicker' => 'Marché du Lez · Montpellier',
+                'title' => 'Le BIVOUAK',
+                'subtitle' => 'canteen · cafe racer · workshop · road trip',
+                'tagline' => 'Base × Camp of Simple Pleasures',
+                'text' => 'Located at the Marché du Lez, Bivouak Café is the base camp of your next culinary expedition in Montpellier. Generous cooking all day long, cocktails at sunset.',
+                'image' => 'https://www.bivouakcafe.fr/wp-content/uploads/2022/04/wim-lippens-BC02_HD-0031-1920x1091.jpg',
+                'image_alt' => 'Bivouak Café atmosphere — Marché du Lez',
+                'primary_label' => 'See the menu',
+                'primary_link' => '#menu',
+                'secondary_label' => 'Book a table',
+                'secondary_link' => '#contact',
+            ]],
+            ['contact', [
+                'anchor' => 'contact',
+                'kicker' => 'Practical info',
+                'title' => 'Find us',
+                'place_name' => 'BIVOUAK CAFÉ — Marché du Lez',
+                'address' => "1348 avenue de la Mer-Raymond Dugrand\n34000 Montpellier, France",
+                'access_note' => 'Inside the Marché du Lez: follow the alleys to our shaded terrace.',
+                'hours' => 'Open 7/7 · 10am – midnight',
+                'phone' => '+33 6 81 37 82 75',
+                'phone_href' => '+33681378275',
+                'call_label' => 'Call to book',
+                'form_title' => 'Booking & groups',
+                'form_intro' => 'Table request or private events — quick reply.',
+                'subjects' => "Table booking\nPrivate event / group\nWorkshop\nOther",
+                'recipient' => '',
+                'map_embed' => 'https://maps.google.com/maps?q=43.592382,3.905457&z=15&output=embed',
+            ]],
+        ];
+
+        foreach ($blocks as $position => [$type, $data]) {
+            $block = new Block();
+            $block->setType($type)->setData($data)->setPosition($position);
+            $page->addBlock($block);
+        }
+
+        $manager->persist($page);
     }
 
     private function loadLegalPage(ObjectManager $manager): void
@@ -238,5 +318,86 @@ class AppFixtures extends Fixture
         $page->addBlock($block);
 
         $manager->persist($page);
+        $this->loadNotFoundPage($manager);
+    }
+
+    /** Page 404 éditable : rendue automatiquement sur les URL introuvables */
+    private function loadNotFoundPage(ObjectManager $manager): void
+    {
+        $page = new Page();
+        $page->setTitle('Page introuvable')
+            ->setSlug('erreur-404')
+            ->setStatus(Page::STATUS_PUBLISHED)
+            ->setNoindex(true)
+            ->setMetaTitle('Page introuvable — Bivouak Café');
+
+        $block = new Block();
+        $block->setType('rich_text')->setPosition(0)->setData([
+            'kicker' => 'Erreur 404',
+            'title' => 'Vous vous êtes égaré en chemin',
+            'content' => "<p>Cette page n'existe pas (ou plus). Comme au bivouac : on reprend la carte et on retrouve le sentier.</p>\n<p><a href=\"/\">← Retour au camp de base</a></p>",
+        ]);
+        $page->addBlock($block);
+
+        $manager->persist($page);
+    }
+
+    private function loadPosts(ObjectManager $manager): void
+    {
+        $events = (new PostCategory())->setName('Événements')->setSlug('evenements');
+        $kitchen = (new PostCategory())->setName('Côté cuisine')->setSlug('cote-cuisine');
+        $manager->persist($events);
+        $manager->persist($kitchen);
+
+        $posts = [
+            [
+                'title' => 'Soirée jazz sur la terrasse tous les jeudis',
+                'slug' => 'soiree-jazz-terrasse-jeudis',
+                'category' => $events,
+                'excerpt' => 'Dès 19h, un trio jazz accompagne vos cocktails au coucher du soleil. Entrée libre, réservation conseillée.',
+                'content' => "<p>À partir de ce mois-ci, le Bivouak accueille chaque jeudi soir un trio jazz sur la terrasse ombragée. Une programmation locale, des standards revisités, et notre carte de cocktails signature pour accompagner.</p>\n<h2>Infos pratiques</h2>\n<ul>\n<li>Tous les jeudis dès 19h</li>\n<li>Entrée libre — table conseillée via le formulaire de réservation</li>\n<li>Carte tapas disponible en continu</li>\n</ul>",
+                'cover' => 'https://www.bivouakcafe.fr/wp-content/uploads/2026/01/terrasse-montpellier-bivouak.jpg',
+                'coverAlt' => 'La terrasse du Bivouak Café au coucher du soleil',
+                'publishedAt' => '-3 days',
+            ],
+            [
+                'title' => 'La carte d\'été est arrivée',
+                'slug' => 'carte-ete-arrivee',
+                'category' => $kitchen,
+                'excerpt' => 'Nouveaux mezze, salades du marché et cocktails fruités : la carte d\'été s\'installe au Marché du Lez.',
+                'content' => "<p>Le plein de fraîcheur pour la saison : notre chef a composé une carte d'été autour des arrivages du Marché du Lez.</p>\n<h2>Les nouveautés</h2>\n<ul>\n<li>Mezze houmous-grenade et labneh aux herbes</li>\n<li>Salade de pastèque, feta et menthe</li>\n<li>Cocktail signature « Road Trip » au citron vert</li>\n</ul>\n<p>La carte évolue chaque semaine selon le marché — suivez nos actualités !</p>",
+                'cover' => 'https://www.bivouakcafe.fr/wp-content/uploads/2022/04/wim-lippens-BC02_HD-0031-1024x683.jpg',
+                'coverAlt' => 'Assiettes de mezze de la carte d\'été',
+                'publishedAt' => '-10 days',
+            ],
+            [
+                'title' => 'Atelier workshop : entretenir son café racer',
+                'slug' => 'atelier-workshop-cafe-racer',
+                'category' => $events,
+                'excerpt' => 'Un samedi par mois, notre atelier mécanique ouvre ses portes aux passionnés de motos vintage.',
+                'content' => "<p>Le workshop du Bivouak, c'est aussi des ateliers pratiques. Prochain rendez-vous : les bases de l'entretien d'un café racer, animé par un mécano passionné.</p>\n<p>Places limitées à 8 participants — inscription via le formulaire de contact.</p>",
+                'cover' => '',
+                'coverAlt' => '',
+                'publishedAt' => null, // brouillon : exemple de prévisualisation
+            ],
+        ];
+
+        foreach ($posts as $data) {
+            $post = (new Post())
+                ->setTitle($data['title'])
+                ->setSlug($data['slug'])
+                ->setCategory($data['category'])
+                ->setExcerpt($data['excerpt'])
+                ->setContent($data['content'])
+                ->setCoverImage($data['cover'] ?: null)
+                ->setCoverAlt($data['coverAlt'] ?: null)
+                ->setMetaDescription($data['excerpt']);
+
+            if ($data['publishedAt']) {
+                $post->setPublishedAt(new \DateTimeImmutable($data['publishedAt']));
+            }
+
+            $manager->persist($post);
+        }
     }
 }

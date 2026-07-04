@@ -2,6 +2,8 @@
 
 namespace App\Tests\Functional;
 
+use App\Entity\ContactMessage;
+
 class AdminSmokeTest extends DatabaseWebTestCase
 {
     private function logIn(): void
@@ -59,5 +61,44 @@ class AdminSmokeTest extends DatabaseWebTestCase
         $this->assertStringContainsString('<', $prototype, 'Le prototype doit contenir du HTML décodable');
         $this->assertStringNotContainsString('&lt;', $prototype, 'Le prototype ne doit pas être doublement échappé');
         $this->assertStringContainsString('__name__', $prototype, 'Le prototype doit contenir le placeholder d\'index');
+    }
+
+    public function testAdminNewFeaturesArePresent(): void
+    {
+        $this->logIn();
+        $crawler = $this->client->request('GET', '/admin/pages');
+        $link = $crawler->filter('table a')->first()->attr('href');
+        $this->client->request('GET', $link);
+
+        $this->assertResponseIsSuccessful();
+        // Sélecteur de médias : modale + boutons "Parcourir"
+        $this->assertSelectorExists('#mediaPicker');
+        $this->assertSelectorExists('[data-media-picker]');
+        // Checklist SEO : score affiché
+        $this->assertSelectorTextContains('body', '/100');
+
+        // Module actualités accessible
+        $this->client->request('GET', '/admin/posts');
+        $this->assertResponseIsSuccessful();
+        $this->assertSelectorTextContains('body', 'Soirée jazz');
+    }
+
+    public function testContactMessagesAreListedInTheBackOffice(): void
+    {
+        $message = (new ContactMessage())
+            ->setName('Jeanne Client')
+            ->setEmail('jeanne@exemple.fr')
+            ->setSubject('Question')
+            ->setMessage('Bonjour, ceci est un message de test.')
+            ->setRecipient('contact@exemple.fr');
+        $this->em->persist($message);
+        $this->em->flush();
+
+        $this->logIn();
+        $this->client->request('GET', '/admin/messages');
+
+        $this->assertResponseIsSuccessful();
+        $this->assertSelectorTextContains('body', 'Jeanne Client');
+        $this->assertSelectorTextContains('body', 'Non lu');
     }
 }

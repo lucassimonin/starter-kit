@@ -1,5 +1,6 @@
 framework:
     secret: '%env(APP_SECRET)%'
+    default_locale: fr
     http_method_override: false
     handle_all_throwables: true
 

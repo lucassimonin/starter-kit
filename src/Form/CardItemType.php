@@ -2,6 +2,7 @@
 
 namespace App\Form;
 
+use App\Form\MediaPickerType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -13,7 +14,7 @@ class CardItemType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('image', TextType::class, ['label' => 'Image (URL)', 'required' => false])
+            ->add('image', MediaPickerType::class, ['label' => 'Image', 'required' => false])
             ->add('image_alt', TextType::class, ['label' => 'Texte alternatif', 'required' => false])
             ->add('title', TextType::class, ['label' => 'Titre', 'required' => false])
             ->add('text', TextareaType::class, ['label' => 'Texte', 'required' => false, 'attr' => ['rows' => 3]])

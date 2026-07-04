@@ -1,6 +1,8 @@
 # CMS Starter Kit — Symfony 7.4 (LTS)
 
-CMS d'agence : pages construites en **blocs drag & drop**, **SEO natif** (meta, Open Graph, JSON-LD, sitemap, redirections 301 automatiques), **bibliothèque médias** (WebP + miniatures auto) et admin sur mesure.
+CMS d'agence : pages construites en **blocs drag & drop**, **SEO natif** (meta, Open Graph, JSON-LD, sitemap, redirections 301 automatiques, checklist par page), **multilingue** (hreflang, sélecteur de langue), **bibliothèque médias** (WebP + miniatures auto, sélecteur intégré aux formulaires), **éditeur de texte riche**, **module actualités** (catégories, RSS), **historique avec restauration**, messages de contact en back-office, prévisualisation partageable des brouillons, duplication et export/import de pages, page 404 éditable, mode maintenance, barre cookies RGPD, login protégé (rate limiting) et admin sur mesure.
+
+En local, les emails sont capturés par **Mailpit** : http://localhost:8025 (démarré avec `docker compose up -d`).
 
 Site de démo intégré : **BIVOUAK CAFÉ** (maquette one-page).
 
@@ -88,3 +90,28 @@ php bin/console cache:clear
 ```
 
 Pensez à changer le mot de passe admin (ou créez un utilisateur dédié en base).
+
+### Déploiement Docker (FrankenPHP, mode worker)
+
+Déploiement autonome sur un serveur : FrankenPHP (Caddy + worker Symfony) + MySQL 8, HTTPS Let's Encrypt automatique.
+
+```bash
+cp .env.prod.dist .env.prod          # renseigner SERVER_NAME, APP_SECRET, mots de passe MySQL, MAILER_DSN
+make prod.up                          # ou : docker compose --env-file .env.prod -f compose.prod.yaml up -d --build
+```
+
+Le domaine renseigné dans `SERVER_NAME` doit pointer sur le serveur (ports 80 + 443 ouverts) : Caddy génère le certificat TLS tout seul.
+
+Fichiers ajoutés : `Dockerfile` (build multi-stage), `frankenphp/` (Caddyfile, php.ini prod, entrypoint), `compose.prod.yaml`, `.env.prod.dist`.
+
+Détails :
+
+- **Mode worker** activé via `runtime/frankenphp-symfony` (kernel gardé en mémoire) — gros gain de perf.
+- **Assets** (importmap + Tailwind minifié + AssetMapper) compilés à la construction de l'image.
+- **Schéma DB** : l'entrypoint synchronise le schéma au démarrage (`AUTO_DB_SETUP=schema`, ou `migrate` si vous ajoutez des migrations). Mettre `LOAD_FIXTURES=1` uniquement au premier déploiement pour charger la démo.
+- **Persistance** : volumes `db_data` (base), `media_data` (médias uploadés), `caddy_data` (certificats TLS).
+
+```bash
+make prod.logs      # logs
+make prod.down      # arrêt
+```

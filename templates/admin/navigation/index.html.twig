@@ -4,11 +4,16 @@
 {% block title %}Navigation{% endblock %}
 {% block page_title %}Menus de navigation{% endblock %}
 
-{% macro item_row(item) %}
+{% macro item_row(item, locales) %}
     {% import 'admin/_icons.html.twig' as icons %}
     <form method="post" action="{{ path('admin_navigation_update', {id: item.id}) }}" class="flex flex-wrap items-center gap-2 px-5 py-3">
         <input type="hidden" name="_token" value="{{ csrf_token('admin') }}">
         <input type="hidden" name="location" value="{{ item.location }}">
+        <select name="locale" class="rounded-lg border border-stone-200 px-2 py-1.5 text-xs uppercase outline-none focus:border-emerald-600" title="Langue">
+            {% for locale in locales %}
+                <option value="{{ locale }}" {{ item.locale == locale ? 'selected' }}>{{ locale|upper }}</option>
+            {% endfor %}
+        </select>
         <input type="number" name="position" value="{{ item.position }}" class="w-16 rounded-lg border border-stone-200 px-2 py-1.5 text-center text-xs outline-none focus:border-emerald-600" title="Ordre">
         <input type="text" name="label" value="{{ item.label }}" class="w-40 rounded-lg border border-stone-200 px-3 py-1.5 text-sm outline-none focus:border-emerald-600" placeholder="Libellé">
         <input type="text" name="url" value="{{ item.url }}" class="min-w-40 flex-1 rounded-lg border border-stone-200 px-3 py-1.5 font-mono text-xs outline-none focus:border-emerald-600" placeholder="/page ou #ancre">
@@ -32,7 +37,7 @@
                 </div>
                 <div class="divide-y divide-stone-50">
                     {% for item in items %}
-                        <div>{{ _self.item_row(item) }}</div>
+                        <div>{{ _self.item_row(item, locales) }}</div>
                     {% else %}
                         <p class="px-5 py-6 text-center text-sm text-stone-400">Aucun lien.</p>
                     {% endfor %}
@@ -40,6 +45,11 @@
                 <form method="post" action="{{ path('admin_navigation_add') }}" class="flex flex-wrap items-center gap-2 border-t border-stone-100 bg-stone-50/60 px-5 py-4">
                     <input type="hidden" name="_token" value="{{ csrf_token('admin') }}">
                     <input type="hidden" name="location" value="{{ location }}">
+                    <select name="locale" class="rounded-lg border border-stone-200 px-2 py-1.5 text-xs uppercase outline-none focus:border-emerald-600" title="Langue">
+                        {% for locale in locales %}
+                            <option value="{{ locale }}">{{ locale|upper }}</option>
+                        {% endfor %}
+                    </select>
                     <input type="number" name="position" value="{{ items|length }}" class="w-16 rounded-lg border border-stone-200 px-2 py-1.5 text-center text-xs outline-none focus:border-emerald-600" title="Ordre">
                     <input type="text" name="label" required placeholder="Libellé" class="w-40 rounded-lg border border-stone-200 px-3 py-1.5 text-sm outline-none focus:border-emerald-600">
                     <input type="text" name="url" required placeholder="/page ou #ancre" class="min-w-40 flex-1 rounded-lg border border-stone-200 px-3 py-1.5 font-mono text-xs outline-none focus:border-emerald-600">

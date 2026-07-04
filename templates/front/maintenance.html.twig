@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <title>Maintenance — {{ setting('site_name', 'Site en maintenance') }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('styles/app.css') }}">
+</head>
+<body class="flex min-h-screen items-center justify-center bg-sand font-body text-ink antialiased">
+<div class="mx-auto max-w-md px-6 text-center">
+    {% if setting('logo_url') %}
+        <img src="{{ setting('logo_url') }}" alt="{{ setting('site_name', '') }}" class="mx-auto h-16 w-auto">
+    {% endif %}
+    <h1 class="mt-8 font-display text-3xl font-semibold text-forest">
+        {{ setting('site_name', 'Notre site') }} revient très vite
+    </h1>
+    <p class="mt-4 text-sm leading-relaxed text-ink/70">
+        {{ setting('maintenance_text', 'Nous effectuons une petite mise à jour. Merci de votre patience, le site sera de retour dans quelques instants.') }}
+    </p>
+    {% if setting('phone') %}
+        <p class="mt-6 text-sm text-ink/60">Besoin de nous joindre ? <a href="tel:{{ setting('phone')|replace({' ': ''}) }}" class="font-semibold text-forest underline">{{ setting('phone') }}</a></p>
+    {% endif %}
+</div>
+</body>
+</html>

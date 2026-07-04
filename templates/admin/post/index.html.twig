@@ -1,0 +1,95 @@
+{% extends 'admin/base.html.twig' %}
+{% import 'admin/_icons.html.twig' as icons %}
+
+{% block title %}Actualités{% endblock %}
+{% block page_title %}Actualités{% endblock %}
+
+{% block header_actions %}
+    <a href="{{ path('admin_post_new') }}" class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-3.5 py-2 text-[13px] font-bold text-white transition hover:bg-emerald-800">
+        {{ icons.icon('plus', 'h-4 w-4') }} Nouvel article
+    </a>
+{% endblock %}
+
+{% block content %}
+    <div class="grid gap-8 xl:grid-cols-[1fr_300px]">
+
+        {# ---- Articles ---- #}
+        <div class="overflow-hidden rounded-2xl border border-stone-200 bg-white">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-stone-50 text-[11px] font-bold uppercase tracking-wider text-stone-400">
+                    <tr>
+                        <th class="px-5 py-3">Titre</th>
+                        <th class="px-5 py-3">Catégorie</th>
+                        <th class="px-5 py-3">Statut</th>
+                        <th class="px-5 py-3">Modifié</th>
+                        <th class="px-5 py-3 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-stone-100">
+                    {% for post in posts %}
+                        <tr class="transition hover:bg-stone-50/60">
+                            <td class="px-5 py-3.5">
+                                <a href="{{ path('admin_post_edit', {id: post.id}) }}" class="font-semibold text-stone-900 hover:text-emerald-700">{{ post.title }}</a>
+                            </td>
+                            <td class="px-5 py-3.5 text-xs text-stone-500">{{ post.category ? post.category.name : '—' }}</td>
+                            <td class="px-5 py-3.5">
+                                <span class="rounded-full px-2 py-0.5 text-[11px] font-bold {{ post.published ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' }}">
+                                    {{ post.published ? 'Publié le ' ~ post.publishedAt|date('d/m/Y') : 'Brouillon' }}
+                                </span>
+                            </td>
+                            <td class="px-5 py-3.5 text-xs text-stone-400">{{ post.updatedAt|date('d/m/Y H:i') }}</td>
+                            <td class="px-5 py-3.5">
+                                <div class="flex items-center justify-end gap-1">
+                                    <a href="{{ post_path(post) }}" target="_blank"
+                                       class="rounded-lg p-2 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700" title="{{ post.published ? 'Voir' : 'Prévisualiser' }}">
+                                        {{ icons.icon('external', 'h-4 w-4') }}
+                                    </a>
+                                    <form method="post" action="{{ path('admin_post_publish', {id: post.id}) }}">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('admin') }}">
+                                        <button type="submit" class="rounded-lg p-2 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700" title="{{ post.published ? 'Repasser en brouillon' : 'Publier' }}">
+                                            {{ icons.icon(post.published ? 'eye-off' : 'check', 'h-4 w-4') }}
+                                        </button>
+                                    </form>
+                                    <form method="post" action="{{ path('admin_post_delete', {id: post.id}) }}" data-confirm="Supprimer l'article « {{ post.title }} » ?">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('admin') }}">
+                                        <button type="submit" class="rounded-lg p-2 text-stone-400 transition hover:bg-red-50 hover:text-red-600" title="Supprimer">
+                                            {{ icons.icon('trash', 'h-4 w-4') }}
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="5" class="px-5 py-10 text-center text-stone-400">Aucun article. Rédigez le premier !</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {# ---- Catégories ---- #}
+        <aside class="rounded-2xl border border-stone-200 bg-white p-5">
+            <h2 class="text-sm font-bold">Catégories</h2>
+            <ul class="mt-4 space-y-2">
+                {% for category in categories %}
+                    <li class="flex items-center justify-between rounded-lg bg-stone-50 px-3 py-2">
+                        <span class="text-[13px] font-semibold text-stone-700">{{ category.name }}</span>
+                        <form method="post" action="{{ path('admin_post_category_delete', {id: category.id}) }}" data-confirm="Supprimer la catégorie « {{ category.name }} » ?">
+                            <input type="hidden" name="_token" value="{{ csrf_token('admin') }}">
+                            <button type="submit" class="rounded p-1 text-stone-300 transition hover:text-red-600" title="Supprimer">
+                                {{ icons.icon('trash', 'h-3.5 w-3.5') }}
+                            </button>
+                        </form>
+                    </li>
+                {% else %}
+                    <li class="text-xs text-stone-400">Aucune catégorie.</li>
+                {% endfor %}
+            </ul>
+            <form method="post" action="{{ path('admin_post_category_add') }}" class="mt-4 flex gap-2">
+                <input type="hidden" name="_token" value="{{ csrf_token('admin') }}">
+                <input type="text" name="name" required placeholder="Nouvelle catégorie"
+                       class="block w-full rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-emerald-600">
+                <button type="submit" class="shrink-0 rounded-lg bg-stone-900 px-3 text-xs font-bold text-white transition hover:bg-stone-700">Ajouter</button>
+            </form>
+        </aside>
+    </div>
+{% endblock %}

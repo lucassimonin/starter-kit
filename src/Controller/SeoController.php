@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Page;
+use App\Entity\Post;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,7 +23,14 @@ class SeoController extends AbstractController
             ['updatedAt' => 'DESC'],
         );
 
-        $response = $this->render('front/sitemap.xml.twig', ['pages' => $pages]);
+        $posts = $this->em->getRepository(Post::class)->createQueryBuilder('p')
+            ->where('p.publishedAt IS NOT NULL')
+            ->andWhere('p.publishedAt <= :now')
+            ->setParameter('now', new \DateTimeImmutable())
+            ->orderBy('p.publishedAt', 'DESC')
+            ->getQuery()->getResult();
+
+        $response = $this->render('front/sitemap.xml.twig', ['pages' => $pages, 'posts' => $posts]);
         $response->headers->set('Content-Type', 'application/xml; charset=UTF-8');
 
         return $response;
