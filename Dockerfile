@@ -64,7 +64,7 @@ ENV APP_DEBUG=0
 # 1) Dépendances PHP d'abord (couche cache indépendante du code source).
 #    composer.lock est volontairement gitignoré dans ce dépôt : on résout donc
 #    les dépendances à partir de composer.json (`composer update`).
-COPY --link composer.json symfony.lock ./
+COPY --link composer.json ./
 RUN set -eux; \
     composer update --no-cache --prefer-dist --no-dev \
         --no-autoloader --no-scripts --no-progress --no-interaction
